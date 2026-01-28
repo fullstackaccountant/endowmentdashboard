@@ -1,75 +1,876 @@
 <!DOCTYPE html>
 <html lang="en">
+<!--
+================================================================================
+ENDOWMENT PERFORMANCE DASHBOARD
+================================================================================
+Description: Interactive financial dashboard for viewing endowment fund data
+             stored in Airtable. Displays key metrics, trends, and fund details.
+
+Author:      [Your Organization Name]
+Version:     2.1.0
+Last Updated: January 2026
+
+SETUP INSTRUCTIONS FOR CUSTOMERS:
+1. Open this file in a web browser
+2. Click the "Configure API" button in the header
+3. Enter your Airtable credentials:
+   - Personal Access Token (from https://airtable.com/create/tokens)
+   - Base ID (from your Airtable base URL)
+   - Table ID (from your Airtable table URL)
+4. Click "Connect" to load your data
+
+BRAND CUSTOMIZATION:
+1. Click the "Brand Colors" button in the header
+2. Customize your 4 brand colors:
+   - Primary: Main brand color (charts, KPI cards 1 & 3)
+   - Secondary: Accent color (trend lines, KPI cards 2 & 4)
+   - Positive: Color for gains and positive values
+   - Negative: Color for losses and negative values
+3. Click "Save Colors" to apply changes
+4. Colors are saved in your browser and persist across sessions
+
+REQUIRED AIRTABLE FIELDS:
+- Date           : Date field (MM/DD/YYYY format)
+- Fund ID        : Text/Number field
+- Fund Name      : Text field
+- Fund Type      : Single/Multi-select field
+- Purpose        : Single/Multi-select field
+- Beginning MV   : Currency/Number field
+- Ending MV      : Currency/Number field
+- Ending Historical Gift : Currency/Number field
+- Realized Gains : Currency/Number field
+- Unrealized Gains : Currency/Number field
+- Investment Fees : Currency/Number field
+- Income         : Currency/Number field
+- Gifts All      : Currency/Number field
+- Distributions All : Currency/Number field
+- Expenses All   : Currency/Number field
+- Income to Principal : Currency/Number field
+- Transfers All  : Currency/Number field
+
+SECURITY NOTE:
+- API credentials are stored in browser localStorage only
+- Credentials are never transmitted to any server other than Airtable
+- Clear browser data to remove stored credentials and brand settings
+================================================================================
+-->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Endowment Performance Dashboard - View and analyze endowment fund financial data">
     <title>Endowment Executive Dashboard</title>
-    <!-- Tailwind CSS -->
+    
+    <!-- ===== EXTERNAL LIBRARIES ===== -->
+    <!-- Google Fonts - Inter for clean professional typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS - Utility-first CSS framework -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js -->
+    <!-- Chart.js - JavaScript charting library -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS - Excel export library -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    
+    <!-- ===== CUSTOM STYLES ===== -->
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #F3F4F6; }
-        .card { background-color: rgb(255, 255, 255); border-radius: 0.50rem; padding: 1.0rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }
-        .loader { border-top-color: #3b82f6; -webkit-animation: spinner 1.5s linear infinite; animation: spinner 1.5s linear infinite; }
-        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .fade-in { animation: fadeIn 0.5s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* Base Styles */
+        body { 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+        }
+        
+        /* Card Component - Enhanced */
+        .card { 
+            background-color: rgb(255, 255, 255); 
+            border-radius: 0.75rem; 
+            padding: 1.25rem; 
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 
+                        0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.1), 
+                        0 8px 16px -4px rgba(0, 0, 0, 0.08);
+        }
+        
+        /* KPI Card Enhanced Styling */
+        .kpi-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+        
+        /* Section Headers */
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1f2937;
+            letter-spacing: -0.01em;
+        }
+        
+        .section-subtitle {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        /* Loading Spinner Animation */
+        .loader { 
+            border-top-color: #3b82f6; 
+            animation: spinner 1.5s linear infinite; 
+        }
+        @keyframes spinner { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        
+        /* Fade-in Animation for Content */
+        .fade-in { 
+            animation: fadeIn 0.5s ease-in; 
+        }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        
+        /* Modal Overlay */
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+        
+        /* Focus States for Accessibility */
+        button:focus, 
+        input:focus, 
+        select:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
+        
+        /* Print Styles */
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; }
+            .card { box-shadow: none; border: 1px solid #e5e7eb; }
+            #print-filters { display: block !important; }
+        }
+        
+        /* Filter Panel Styles - Enhanced */
+        .filter-panel {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+        
+        .filter-panel-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .filter-select {
+            width: 100%;
+            padding: 0.625rem 0.75rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            background-color: #fafafa;
+            transition: all 0.2s;
+        }
+        
+        .filter-select:hover {
+            border-color: #d1d5db;
+            background-color: white;
+        }
+        
+        .filter-select:focus {
+            border-color: #3b82f6;
+            background-color: white;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+        
+        /* Fund Search Dropdown Styles */
+        #fund-dropdown {
+            max-height: 320px; /* Approximately 10 items at ~32px each */
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f1f5f9;
+        }
+        
+        #fund-dropdown::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #fund-dropdown::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        
+        #fund-dropdown::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        
+        #fund-dropdown::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        .fund-option {
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .fund-option:last-child {
+            border-bottom: none;
+        }
+        
+        .fund-option:hover {
+            background-color: #eff6ff;
+        }
+        
+        /* Table Styles - Enhanced */
+        .data-table {
+            width: 100%;
+        }
+        
+        .data-table thead {
+            background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
+        }
+        
+        .data-table thead th {
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.7rem;
+            color: #4b5563;
+            padding: 0.875rem 0.75rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .data-table tbody tr {
+            transition: background-color 0.15s ease;
+        }
+        
+        .data-table tbody tr:nth-child(even) {
+            background-color: #fafbfc;
+        }
+        
+        .data-table tbody tr:hover {
+            background-color: #f0f7ff;
+        }
+        
+        /* Table Search - Enhanced */
+        .table-search {
+            padding: 0.625rem 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            width: 100%;
+            max-width: 300px;
+            background-color: #fafafa;
+            transition: all 0.2s;
+        }
+        
+        .table-search:hover {
+            border-color: #d1d5db;
+            background-color: white;
+        }
+        
+        .table-search:focus {
+            border-color: #3b82f6;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+        
+        /* Pagination Styles - Enhanced */
+        .pagination-btn {
+            padding: 0.5rem 0.875rem;
+            border: 1px solid #e5e7eb;
+            background: white;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .pagination-btn:hover:not(:disabled) {
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+        
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .pagination-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        
+        /* Button Styles - Enhanced */
+        .btn-primary {
+            background: linear-gradient(to bottom, #3b82f6, #2563eb);
+            color: white;
+            font-weight: 500;
+            padding: 0.625rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(to bottom, #2563eb, #1d4ed8);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #374151;
+            font-weight: 500;
+            padding: 0.625rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+        
+        .btn-secondary:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+        
+        .btn-success {
+            background: linear-gradient(to bottom, #10b981, #059669);
+            color: white;
+            font-weight: 500;
+            padding: 0.625rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(to bottom, #059669, #047857);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Header Styles */
+        .dashboard-header {
+            background: white;
+            margin: -0.75rem -1.5rem 1.5rem -1.5rem;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        @media (min-width: 1024px) {
+            .dashboard-header {
+                margin: -2.5rem -5rem 2rem -5rem;
+                padding: 1.5rem 5rem;
+            }
+        }
+        
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .status-badge-live,
+        .status-badge-success {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-badge-offline,
+        .status-badge-warning {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        /* Collapsible Filter Panel - Slides to right */
+        .filter-aside {
+            transition: width 0.3s ease-in-out, min-width 0.3s ease-in-out;
+            width: 20rem; /* lg:w-80 = 320px */
+            min-width: 20rem;
+        }
+        
+        .filter-aside.collapsed {
+            width: 3rem;
+            min-width: 3rem;
+        }
+        
+        .filter-panel-wrapper {
+            transition: opacity 0.2s ease-in-out, transform 0.3s ease-in-out;
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .filter-aside.collapsed .filter-panel-wrapper {
+            opacity: 0;
+            transform: translateX(100%);
+            pointer-events: none;
+            position: absolute;
+        }
+        
+        .filter-expand-btn {
+            display: none;
+            position: sticky;
+            top: 1rem;
+        }
+        
+        .filter-aside.collapsed .filter-expand-btn {
+            display: flex;
+        }
+        
+        .filter-content {
+            max-height: 1000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out, padding 0.3s ease-in-out;
+            opacity: 1;
+        }
+        
+        .filter-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+        
+        .filter-toggle-icon {
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        .filter-toggle-icon.collapsed {
+            transform: rotate(180deg);
+        }
+        
+        /* Editable Title */
+        .editable-title {
+            transition: background-color 0.2s;
+            border-radius: 0.375rem;
+            padding: 0.25rem 0.5rem;
+            margin: -0.25rem -0.5rem;
+        }
+        
+        .editable-title:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .editable-title:focus {
+            background-color: #eff6ff;
+            outline: 2px solid #3b82f6;
+        }
     </style>
 </head>
+
 <body class="pt-3 md:pt-4 lg:pt-10 pb-6 md:pb-8 lg:pb-20 px-6 md:px-8 lg:px-20">
 
-    <!-- Header -->
-    <header class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-800">Endowment Performance Dashboard</h1>
-            <p class="text-gray-500 mt-1">Summary Report as of <span id="selectedDate">loading...</span></p>
-        </div>
-        <div class="mt-4 md:mt-0 flex flex-wrap gap-3">
-             <!-- Data Source Badge -->
-             <div class="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-                <span class="text-xs text-gray-500 block uppercase tracking-wide">Data Source</span>
-                <span id="source-badge" class="font-semibold text-gray-700 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-gray-300"></span> Initializing...
-                </span>
-             </div>
-
-             <!-- ADDED: Date Filter Dropdown Container -->
-             <div class="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200 min-w-[160px]">
-                <label for="date-filter" class="text-xs text-gray-500 block uppercase tracking-wide">Reporting Period</label>
-                <div class="flex items-center">
-                    <svg class="w-4 h-4 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    <!-- The select element that triggers updates -->
-                    <select id="date-filter" class="bg-transparent font-semibold text-gray-700 outline-none cursor-pointer w-full hover:text-blue-600 transition-colors">
-                        <!-- Options injected via JS -->
-                    </select>
+    <!-- ===== API CONFIGURATION MODAL ===== -->
+    <!-- Modal for customers to enter their Airtable API credentials -->
+    <div id="api-config-modal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-overlay absolute inset-0" onclick="closeConfigModal()"></div>
+        <div class="relative z-10 flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 transform transition-all">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold text-gray-800">Configure Airtable Connection</h2>
+                    <button onclick="closeConfigModal()" 
+                            class="text-gray-400 hover:text-gray-600 transition-colors"
+                            aria-label="Close modal">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
                 </div>
-             </div>
+                
+                <!-- Configuration Form -->
+                <form id="api-config-form" onsubmit="saveApiConfig(event)">
+                    <!-- Personal Access Token Field -->
+                    <div class="mb-4">
+                        <label for="api-key-input" class="block text-sm font-medium text-gray-700 mb-1">
+                            Personal Access Token
+                        </label>
+                        <input type="password" 
+                               id="api-key-input" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="pat..."
+                               required>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Get your token from <a href="https://airtable.com/create/tokens" target="_blank" class="text-blue-600 hover:underline">Airtable Settings</a>
+                        </p>
+                    </div>
+                    
+                    <!-- Base ID Field -->
+                    <div class="mb-4">
+                        <label for="base-id-input" class="block text-sm font-medium text-gray-700 mb-1">
+                            Base ID
+                        </label>
+                        <input type="text" 
+                               id="base-id-input" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="app..."
+                               required>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Found in your Airtable base URL after "airtable.com/"
+                        </p>
+                    </div>
+                    
+                    <!-- Table ID Field -->
+                    <div class="mb-6">
+                        <label for="table-id-input" class="block text-sm font-medium text-gray-700 mb-1">
+                            Table ID
+                        </label>
+                        <input type="text" 
+                               id="table-id-input" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="tbl..."
+                               required>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Found in your table URL after the Base ID
+                        </p>
+                    </div>
+                    
+                    <!-- Security Notice -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                            <p class="text-xs text-blue-700">
+                                <strong>Privacy:</strong> Your credentials are stored locally in your browser only and are never sent to any server except Airtable's API.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Form Actions -->
+                    <div class="flex gap-3">
+                        <button type="button" 
+                                onclick="clearApiConfig()" 
+                                class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            Clear Saved
+                        </button>
+                        <button type="submit" 
+                                class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                            Connect
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== BRAND COLORS CONFIGURATION MODAL ===== -->
+    <!-- Modal for customers to customize dashboard brand colors -->
+    <div id="brand-colors-modal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-overlay absolute inset-0" onclick="closeBrandColorsModal()"></div>
+        <div class="relative z-10 flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 transform transition-all">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold text-gray-800">Customize Brand Colors</h2>
+                    <button onclick="closeBrandColorsModal()" 
+                            class="text-gray-400 hover:text-gray-600 transition-colors"
+                            aria-label="Close modal">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Brand Colors Form -->
+                <form id="brand-colors-form" onsubmit="saveBrandColors(event)">
+                    <!-- 4 Brand Colors -->
+                    <div class="space-y-4 mb-6">
+                        <!-- Primary Color -->
+                        <div>
+                            <label for="color-primary" class="block text-sm font-medium text-gray-700 mb-1">
+                                Primary Color
+                            </label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" id="color-primary" class="w-12 h-10 rounded cursor-pointer border border-gray-300">
+                                <input type="text" id="color-primary-hex" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono" placeholder="#003665">
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Main brand color for charts, KPI cards 1 & 3, pie chart</p>
+                        </div>
+                        
+                        <!-- Secondary Color -->
+                        <div>
+                            <label for="color-secondary" class="block text-sm font-medium text-gray-700 mb-1">
+                                Secondary Color
+                            </label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" id="color-secondary" class="w-12 h-10 rounded cursor-pointer border border-gray-300">
+                                <input type="text" id="color-secondary-hex" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono" placeholder="#ff6600">
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Accent color for trend lines, KPI cards 2 & 4, bar charts</p>
+                        </div>
+                        
+                        <!-- Positive Color -->
+                        <div>
+                            <label for="color-positive" class="block text-sm font-medium text-gray-700 mb-1">
+                                Positive Color
+                            </label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" id="color-positive" class="w-12 h-10 rounded cursor-pointer border border-gray-300">
+                                <input type="text" id="color-positive-hex" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono" placeholder="#10b981">
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Color for gains, positive changes, and growth indicators</p>
+                        </div>
+                        
+                        <!-- Negative Color -->
+                        <div>
+                            <label for="color-negative" class="block text-sm font-medium text-gray-700 mb-1">
+                                Negative Color
+                            </label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" id="color-negative" class="w-12 h-10 rounded cursor-pointer border border-gray-300">
+                                <input type="text" id="color-negative-hex" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono" placeholder="#ef4444">
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Color for losses, negative changes, and warning indicators</p>
+                        </div>
+                    </div>
+
+                    <!-- Color Preview Section -->
+                    <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                        <h3 class="text-sm font-semibold text-gray-700 mb-3">Preview</h3>
+                        <div class="flex gap-3" id="color-preview">
+                            <div class="flex-1 text-center">
+                                <div class="w-full h-10 rounded-lg" id="preview-primary"></div>
+                                <span class="text-xs text-gray-500 mt-1 block">Primary</span>
+                            </div>
+                            <div class="flex-1 text-center">
+                                <div class="w-full h-10 rounded-lg" id="preview-secondary"></div>
+                                <span class="text-xs text-gray-500 mt-1 block">Secondary</span>
+                            </div>
+                            <div class="flex-1 text-center">
+                                <div class="w-full h-10 rounded-lg" id="preview-positive"></div>
+                                <span class="text-xs text-gray-500 mt-1 block">Positive</span>
+                            </div>
+                            <div class="flex-1 text-center">
+                                <div class="w-full h-10 rounded-lg" id="preview-negative"></div>
+                                <span class="text-xs text-gray-500 mt-1 block">Negative</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Form Actions -->
+                    <div class="flex gap-3">
+                        <button type="button" 
+                                onclick="resetBrandColors()" 
+                                class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            Reset to Default
+                        </button>
+                        <button type="submit" 
+                                class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                            Save Colors
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== CALENDLY DEMO BOOKING MODAL ===== -->
+    <!-- 
+        Purpose: Displays a popup after 30 seconds inviting users to book a demo
+        - Only shows once per session (tracked via sessionStorage)
+        - Features Richard Westerfield's Calendly booking link
+        - Includes attractive call-to-action with benefits messaging
+        - Dismissible with close button or clicking outside
+    -->
+    <div id="calendly-modal" 
+         class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden"
+         role="dialog"
+         aria-labelledby="calendly-modal-title"
+         aria-modal="true"
+         onclick="closeCalendlyModal(event)">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" 
+             id="calendly-modal-content"
+             onclick="event.stopPropagation()">
+            <!-- Modal Header with Gradient -->
+            <div class="bg-gradient-to-r from-blue-600 to-blue-800 rounded-t-2xl px-6 py-5 text-white relative">
+                <!-- Close Button -->
+                <button onclick="closeCalendlyModal()" 
+                        class="absolute top-4 right-4 text-white/80 hover:text-white transition-colors"
+                        aria-label="Close modal">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+                
+                <!-- Calendar Icon -->
+                <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-3">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                
+                <h2 id="calendly-modal-title" class="text-xl font-bold">Looking for Endowment Software?</h2>
+                <p class="text-blue-100 mt-1 text-sm">Learn more about <a href="https://www.evertrue.com/balance/" target="_blank" rel="noopener noreferrer" class="underline hover:text-white transition-colors">Balance by EverTrue</a> endowment software.</p>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="px-6 py-5">
+                <p class="text-gray-600 mb-4">
+                    Book a 30-minute demo with <span class="font-semibold text-gray-800">Richard Westerfield</span> to learn how Balance automates:
+                </p>
+                
+                <!-- Benefits List -->
+                <ul class="space-y-2 mb-5">
+                    <li class="flex items-start gap-2 text-sm text-gray-600">
+                        <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span>Endowment Management</span>
+                    </li>
+                    <li class="flex items-start gap-2 text-sm text-gray-600">
+                        <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span>Spending Policies</span>
+                    </li>
+                    <li class="flex items-start gap-2 text-sm text-gray-600">
+                        <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span>Investment Allocations</span>
+                    </li>
+                </ul>
+                
+                <!-- CTA Buttons -->
+                <div class="flex flex-col gap-3">
+                    <a href="https://calendly.com/richard-westerfield-evertrue" 
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-center flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        Book a Demo
+                    </a>
+                    <button onclick="closeCalendlyModal()" 
+                            class="w-full px-4 py-2 text-gray-500 hover:text-gray-700 transition-colors text-sm">
+                        Maybe later
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== HEADER SECTION ===== -->
+    <header class="dashboard-header">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <!-- Title and Subtitle -->
+            <div>
+                <h1 id="dashboard-title" 
+                    class="text-2xl lg:text-3xl font-bold text-gray-800 editable-title cursor-pointer"
+                    contenteditable="true"
+                    spellcheck="false"
+                    title="Click to edit title"
+                    onblur="saveDashboardTitle()"
+                    onkeydown="handleTitleKeydown(event)">Endowment Performance Dashboard</h1>
+                <p class="text-gray-500 mt-1 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    Summary Report as of <span id="selectedDate" class="font-medium text-gray-700" aria-live="polite">loading...</span>
+                </p>
+                <!-- Print-friendly filter display (hidden on screen, shown when printing) -->
+                <div id="print-filters" class="hidden print:block text-sm text-gray-600 mt-2">
+                    <span class="font-medium">Filters Applied:</span>
+                    <span id="print-filters-list">None</span>
+                </div>
+            </div>
+            
+            <!-- Header Controls -->
+            <div class="flex flex-wrap items-center gap-3 no-print">
+                <!-- Data Source Status Badge -->
+                <div id="source-badge" class="status-badge status-badge-offline" aria-live="polite">
+                    <span class="w-2 h-2 rounded-full bg-current opacity-70"></span>
+                    <span>Initializing...</span>
+                </div>
+                
+                <!-- Divider -->
+                <div class="hidden lg:block w-px h-8 bg-gray-200"></div>
+                
+                <!-- API Configuration Button -->
+                <button onclick="openConfigModal()" 
+                        class="btn-secondary flex items-center gap-2 text-sm"
+                        aria-label="Configure API connection">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <span>Settings</span>
+                </button>
+                
+                <!-- Brand Colors Button -->
+                <button onclick="openBrandColorsModal()" 
+                        class="btn-secondary flex items-center gap-2 text-sm"
+                        aria-label="Customize brand colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+                    </svg>
+                    <span>Colors</span>
+                </button>
+            </div>
         </div>
     </header>
 
 
 
 
-    <!-- Loading State -->
+    <!-- ===== LOADING STATE ===== -->
+    <!-- Displayed while fetching data from Airtable -->
     <div id="loading-indicator" class="flex flex-col items-center justify-center h-64">
-        <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
+        <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4" 
+             role="status" 
+             aria-label="Loading data"></div>
         <p class="text-gray-500 font-medium">Connecting to Airtable...</p>
-        <p class="text-xs text-gray-400 mt-2">If connection fails, static data will be loaded.</p>
+        <p class="text-xs text-gray-400 mt-2">Please configure your API credentials if not already set.</p>
     </div>
 
-    <!-- Error/Warning Banner (Hidden by default) -->
-    <div id="warning-message" class="hidden bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8">
+    <!-- ===== ERROR/WARNING BANNER ===== -->
+    <!-- Displayed when API connection fails or no credentials configured -->
+    <div id="warning-message" class="hidden bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8" role="alert">
         <div class="flex">
             <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
                 </svg>
             </div>
             <div class="ml-3">
                 <p class="text-sm text-yellow-700">
-                    <span class="font-bold">Connection Failed:</span> 
-                    <span id="warning-text">Using static fallback data.</span>
+                    <span class="font-bold">Connection Notice:</span> 
+                    <span id="warning-text">Please configure your Airtable API credentials.</span>
                 </p>
             </div>
         </div>
@@ -77,71 +878,343 @@
 
 
 
-    <!-- Main Content (Hidden until loaded) -->
+    <!-- ===== MAIN DASHBOARD CONTENT ===== -->
+    <!-- Hidden until data is successfully loaded -->
     <div id="dashboard-content" class="hidden fade-in">
         
-        <!-- Key Metrics Row -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 h-30" id="metrics-container"></div>
+        <!-- ===== MAIN LAYOUT: Content + Filter Panel ===== -->
+        <div class="flex flex-col lg:flex-row gap-6">
+            
+            <!-- ===== LEFT SIDE: Main Dashboard Content ===== -->
+            <div class="flex-1 min-w-0">
+                
+                <!-- ===== KEY PERFORMANCE INDICATORS (KPIs) ===== -->
+                <!-- Top-level metrics cards showing portfolio summary -->
+                <section aria-label="Key Performance Indicators">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" id="metrics-container">
+                        <!-- KPI cards are dynamically generated -->
+                    </div>
+                </section>
 
-        <!-- Charts Row 1 -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <div class="card lg:col-span-2 ">
-                <h3 class="text-lg font-semibold text-gray-700 mb-4">Total Market Value Trend</h3>
-                <div class="h-96">
-                    <canvas id="trendChart"></canvas>
+        <!-- ===== CHARTS ROW 1: Rollforward & Trend ===== -->
+        <section aria-label="Performance Charts" class="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
+            <!-- Rollforward Financial Summary -->
+            <div class="card lg:col-span-2">
+                <h3 class="section-title mb-1">Market Value Rollforward</h3>
+                <p class="section-subtitle mb-3"><span class="formatted-date"></span></p>
+                <div id="rollforward-summary" class="text-sm">
+                    <!-- Populated dynamically -->
                 </div>
             </div>
-            <div class="card">
-                <h3 class="text-lg font-semibold text-gray-700 mb-0.5">Fund Type</h3>
-                <p class="text-gray-500 mt-1"><span class="formatted-date"></span></p>
-                <div class="h-96 flex justify-center">
-                    <canvas id="classificationChart"></canvas>
+            
+            <!-- Market Value Trend Chart (Line Chart) -->
+            <div class="card lg:col-span-3 flex flex-col">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="section-title">Total Market Value Trend</h3>
+                    <span class="section-subtitle">Historical</span>
+                </div>
+                <div class="flex-1 min-h-0 relative" style="height: 300px;">
+                    <canvas id="trendChart" aria-label="Line chart showing market value trend over time"></canvas>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- Charts Row 2 -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- ===== CHARTS ROW 2: Classification & Purpose ===== -->
+        <section aria-label="Additional Analysis Charts" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Fund Type Distribution Chart (Doughnut Chart) -->
             <div class="card">
-                <h3 class="text-lg font-semibold text-gray-700 mb-0.5">Market Value by Purpose</h3>
-                <p class="text-gray-500 mt-1 mb-2"><span class="formatted-date"></span></p>
+                <h3 class="section-title mb-1">Fund Type Distribution</h3>
+                <p class="section-subtitle"><span class="formatted-date"></span></p>
+                <div class="h-64 flex justify-center">
+                    <canvas id="classificationChart" aria-label="Doughnut chart showing fund type distribution"></canvas>
+                </div>
+            </div>
+            
+            <!-- Market Value by Purpose Chart (Bar Chart) -->
+            <div class="card">
+                <h3 class="section-title mb-1">Market Value by Purpose</h3>
+                <p class="section-subtitle mb-3"><span class="formatted-date"></span></p>
                 <div class="h-64">
-                    <canvas id="purposeChart"></canvas>
+                    <canvas id="purposeChart" aria-label="Bar chart showing market value breakdown by purpose"></canvas>
                 </div>
             </div>
-            <div class="card">
-                <h3 class="text-lg font-semibold text-gray-700 mb-0.5">Realized vs. Unrealized Gains</h3>
-                <p class="text-gray-500 mt-1 mb-2"><span class="formatted-date"></span></p>
-                <div class="h-64">
-                    <canvas id="gainsChart"></canvas>
-                </div>
-            </div>
-        </div>
+        </section>
 
-        <!-- Top Funds Table -->
-        <div class="card overflow-hidden">
-            <h3 class="text-lg font-semibold text-gray-700 mb-0.5">Endowment Transaction Rollforward</h3>
-            <p class="text-gray-500 mt-1 mb-2"><span class="formatted-date"></span></p>
-            <div class="overflow-x-auto">
-                <table class="w-full table-fixed divide-y divide-gray-200 text-sm">
-                    <thead class="bg-gray-50">
+        <!-- ===== DATA TABLE: Fund Rollforward ===== -->
+        <section aria-label="Fund Details Table" class="card overflow-hidden">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                <div>
+                    <h3 class="section-title">Endowment Transaction Rollforward</h3>
+                    <p class="section-subtitle mt-1"><span class="formatted-date"></span></p>
+                </div>
+                
+                <!-- Table Controls: Search & Export -->
+                <div class="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0">
+                    <!-- Search Input -->
+                    <div class="relative">
+                        <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <input type="text" 
+                               id="table-search" 
+                               placeholder="Search funds..." 
+                               class="table-search pl-10"
+                               aria-label="Search funds in table">
+                    </div>
+                    
+                    <!-- Export Button -->
+                    <button onclick="exportToExcel()" 
+                            class="btn-success flex items-center justify-center gap-2 text-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Export to Excel
+                    </button>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto rounded-lg border border-gray-200">
+                <table class="data-table w-full table-auto text-xs" role="table" id="funds-table">
+                    <thead>
                         <tr>
-                            <th class="px-3 py-2 text-left text-s font-bold text-gray-500 uppercase tracking-wider">Fund Name</th>
-                            <th class="px-3 py-2 text-left text-s font-bold text-gray-500 uppercase tracking-wider">Purpose</th>
-                            <th class="px-3 py-2 text-right text-s font-bold text-gray-500 uppercase tracking-wider">Beginning MV</th>
-                            <th class="px-3 py-2 text-right text-s font-bold text-gray-500 uppercase tracking-wider">Net Investment Activity</th>
-                            <th class="px-3 py-2 text-right text-s font-bold text-gray-500 uppercase tracking-wider">Net Fund Activity</th>
-                            <th class="px-3 py-2 text-right text-s font-bold text-gray-500 uppercase tracking-wider">Ending MV</th>
-                            <th class="px-3 py-2 text-right text-s font-bold text-gray-500 uppercase tracking-wider">Change (MoM)</th>
+                            <th scope="col" class="px-2 py-2 text-left min-w-[200px]">Fund Name</th>
+                            <th scope="col" class="px-2 py-2 text-left whitespace-nowrap">Purpose</th>
+                            <th scope="col" class="px-2 py-2 text-right whitespace-nowrap">Beg. Hist. Gift</th>
+                            <th scope="col" class="px-2 py-2 text-right whitespace-nowrap">Beg. MV</th>
+                            <th scope="col" class="px-2 py-2 text-right whitespace-nowrap">Net Invest.</th>
+                            <th scope="col" class="px-2 py-2 text-right whitespace-nowrap">Net Fund</th>
+                            <th scope="col" class="px-2 py-2 text-right whitespace-nowrap">End. MV</th>
+                            <th scope="col" class="px-2 py-2 text-right whitespace-nowrap">End. Hist. Gift</th>
+                            <th scope="col" class="px-2 py-2 text-right whitespace-nowrap">Change</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200" id="top-funds-body"></tbody>
+                    <tbody class="divide-y divide-gray-100" id="top-funds-body">
+                        <!-- Table rows are dynamically generated -->
+                    </tbody>
                 </table>
             </div>
-        </div>
-        <div class="float-right">
-            <p class="text-gray-500 mt-1 mb-2 pt-8 ">Powered by Fundriver Balance</p>
-        </div>
+            
+            <!-- Pagination Controls -->
+            <div class="flex flex-col sm:flex-row items-center justify-between mt-4 pt-4 border-t border-gray-200">
+                <div class="flex items-center gap-2 mb-3 sm:mb-0">
+                    <label for="rows-per-page" class="text-sm text-gray-600">Rows per page:</label>
+                    <select id="rows-per-page" class="filter-select w-auto" onchange="changeRowsPerPage()">
+                        <option value="10" selected>10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="all">All</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <span id="pagination-info" class="text-sm text-gray-600 mr-2"></span>
+                    <button id="prev-page" onclick="changePage(-1)" class="pagination-btn rounded-l-lg" disabled>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <div id="page-numbers" class="flex"></div>
+                    <button id="next-page" onclick="changePage(1)" class="pagination-btn rounded-r-lg" disabled>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+        
+        <!-- ===== FOOTER ===== -->
+        <footer class="mt-8 pt-6 border-t border-gray-200">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <p class="text-sm text-gray-500">
+                    <span class="font-medium">Endowment Dashboard</span> • Last updated: <span id="last-updated">--</span>
+                </p>
+                <p class="text-sm text-gray-400">Powered by <a href="https://www.linkedin.com/in/richard-westerfield/" target="_blank" rel="noopener noreferrer" class="hover:text-gray-600 underline transition-colors">Richard Westerfield</a></p>
+            </div>
+        </footer>
+        
+            </div><!-- End Left Side -->
+            
+            <!-- ===== RIGHT SIDE: Filter Panel ===== -->
+            <aside id="filter-aside" class="filter-aside flex-shrink-0 no-print relative">
+                <!-- Expand button (shown when collapsed) -->
+                <button onclick="toggleFilterPanel()" 
+                        class="filter-expand-btn w-12 h-12 bg-white rounded-lg shadow-md border border-gray-200 items-center justify-center hover:bg-gray-50 transition-colors"
+                        title="Show Filters"
+                        aria-label="Expand filter panel">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                    </svg>
+                </button>
+                
+                <!-- Filter Panel (hidden when collapsed) -->
+                <div class="filter-panel-wrapper">
+                <div class="filter-panel sticky top-4">
+                    <div class="filter-panel-header cursor-pointer" onclick="toggleFilterPanel()">
+                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                        </svg>
+                        <h3 class="text-base font-semibold text-gray-800">Filters</h3>
+                        <div class="ml-auto flex items-center gap-3">
+                            <button onclick="event.stopPropagation(); resetFilters()" class="text-xs text-blue-600 hover:text-blue-800 font-medium hover:underline">
+                                Reset All
+                            </button>
+                            <svg id="filter-toggle-icon" class="filter-toggle-icon w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" title="Collapse Filters">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Collapsible Filter Content -->
+                    <div id="filter-content" class="filter-content">
+                    <!-- Reporting Period Filter -->
+                    <div class="mb-4">
+                        <label for="date-filter" class="block text-sm font-medium text-gray-700 mb-1">
+                            Reporting Period
+                        </label>
+                        <select id="date-filter" class="filter-select" onchange="applyFilters()" aria-label="Select reporting period">
+                            <!-- Options populated dynamically via JavaScript -->
+                        </select>
+                    </div>
+                    
+                    <!-- Fund ID / Name Filter with Search -->
+                    <div class="mb-4">
+                        <label for="filter-fund-search" class="block text-sm font-medium text-gray-700 mb-1">
+                            Fund ID or Name
+                        </label>
+                        <div class="relative">
+                            <input type="text" 
+                                   id="filter-fund-search" 
+                                   class="filter-select pr-8" 
+                                   placeholder="Search funds..."
+                                   autocomplete="off"
+                                   oninput="handleFundSearchInput(this.value)"
+                                   onfocus="showFundDropdown()"
+                                   onblur="hideFundDropdownDelayed()">
+                            <button type="button" 
+                                    onclick="clearFundSearch()" 
+                                    id="clear-fund-search"
+                                    class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden"
+                                    aria-label="Clear search">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                            <!-- Custom scrollable dropdown -->
+                            <div id="fund-dropdown" 
+                                 class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg hidden max-h-64 overflow-y-auto">
+                                <!-- Options populated dynamically -->
+                            </div>
+                        </div>
+                        <!-- Hidden input to store the selected fund ID -->
+                        <input type="hidden" id="filter-fund" value="">
+                    </div>
+                    
+                    <!-- College Filter -->
+                    <div class="mb-4">
+                        <label for="filter-operating-unit" class="block text-sm font-medium text-gray-700 mb-1">
+                            College
+                        </label>
+                        <select id="filter-operating-unit" class="filter-select" onchange="applyFilters()">
+                            <option value="">All Colleges</option>
+                            <!-- Options populated dynamically -->
+                        </select>
+                    </div>
+                    
+                    <!-- School Filter -->
+                    <div class="mb-4">
+                        <label for="filter-reporting-unit" class="block text-sm font-medium text-gray-700 mb-1">
+                            School
+                        </label>
+                        <select id="filter-reporting-unit" class="filter-select" onchange="applyFilters()">
+                            <option value="">All Schools</option>
+                            <!-- Options populated dynamically -->
+                        </select>
+                    </div>
+                    
+                    <!-- Net Asset Classification Filter -->
+                    <div class="mb-4">
+                        <label for="filter-nac" class="block text-sm font-medium text-gray-700 mb-1">
+                            Net Asset Classification
+                        </label>
+                        <select id="filter-nac" class="filter-select" onchange="applyFilters()">
+                            <option value="">All Classifications</option>
+                            <!-- Options populated dynamically -->
+                        </select>
+                    </div>
+                    
+                    <!-- Fund Type Filter -->
+                    <div class="mb-4">
+                        <label for="filter-fund-type" class="block text-sm font-medium text-gray-700 mb-1">
+                            Fund Type
+                        </label>
+                        <select id="filter-fund-type" class="filter-select" onchange="applyFilters()">
+                            <option value="">All Types</option>
+                            <!-- Options populated dynamically -->
+                        </select>
+                    </div>
+                    
+                    <!-- Purpose Filter -->
+                    <div class="mb-4">
+                        <label for="filter-purpose" class="block text-sm font-medium text-gray-700 mb-1">
+                            Purpose
+                        </label>
+                        <select id="filter-purpose" class="filter-select" onchange="applyFilters()">
+                            <option value="">All Purposes</option>
+                            <!-- Options populated dynamically -->
+                        </select>
+                    </div>
+                    
+                    <!-- Ending MV Range Filter -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Ending MV Range
+                        </label>
+                        <div class="flex gap-2">
+                            <input type="number" 
+                                   id="filter-mv-min" 
+                                   placeholder="Min" 
+                                   class="filter-select text-sm"
+                                   onchange="applyFilters()">
+                            <input type="number" 
+                                   id="filter-mv-max" 
+                                   placeholder="Max" 
+                                   class="filter-select text-sm"
+                                   onchange="applyFilters()">
+                        </div>
+                    </div>
+                    
+                    <!-- Underwater Funds Filter -->
+                    <div class="mb-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" 
+                                   id="filter-underwater" 
+                                   class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                   onchange="applyFilters()">
+                            <span class="text-sm font-medium text-gray-700">Underwater Funds Only</span>
+                        </label>
+                        <p class="text-xs text-gray-500 mt-1 ml-6">Funds where MV &lt; Historical Gift</p>
+                    </div>
+                    
+                    <!-- Active Filters Summary -->
+                    <div id="active-filters" class="hidden mt-4 pt-4 border-t border-gray-200">
+                        <p class="text-xs text-gray-500 mb-2">Active Filters:</p>
+                        <div id="active-filters-list" class="flex flex-wrap gap-1"></div>
+                    </div>
+                    </div><!-- End Collapsible Filter Content -->
+                    
+                    <!-- Filter Results Count (always visible) -->
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <p class="text-sm text-gray-600">
+                            Showing <span id="filtered-count" class="font-semibold">0</span> of <span id="total-count" class="font-semibold">0</span> funds
+                        </p>
+                    </div>
+                </div>
+                </div><!-- End Filter Panel Wrapper -->
+            </aside>
+            
+        </div><!-- End Main Layout -->
     </div>
 
 
@@ -149,408 +1222,2224 @@
 
 
 <script>
-    const AIRTABLE_API_KEY = 'patNkGybog51MCTiX.36d122f88ca9256694b0e486716ad54deb80deaade897ed47812ee0fc28b40bc'; 
-    const BASE_ID = 'appi2ZISKIKgr6Hyr';          
-    const TABLE_ID = 'tblJgNTacuGqo4hn2'; 
+/**
+ * ============================================================================
+ * ENDOWMENT DASHBOARD - JAVASCRIPT APPLICATION
+ * ============================================================================
+ * 
+ * This script powers the Endowment Performance Dashboard by:
+ * - Managing secure API credential storage (localStorage)
+ * - Fetching data from Airtable API
+ * - Rendering charts and visualizations
+ * - Handling user interactions and filtering
+ * 
+ * ============================================================================
+ */
 
+// ============================================================================
+// SECTION 1: CONFIGURATION & CONSTANTS
+// ============================================================================
 
+/**
+ * LocalStorage keys for storing API credentials and brand settings.
+ * These are stored securely in the browser's localStorage.
+ */
+const STORAGE_KEYS = {
+    API_KEY: 'endowment_dashboard_api_key',
+    BASE_ID: 'endowment_dashboard_base_id',
+    TABLE_ID: 'endowment_dashboard_table_id',
+    BRAND_COLORS: 'endowment_dashboard_brand_colors',
+    DASHBOARD_TITLE: 'endowment_dashboard_title'
+};
 
-        // --- Global State ---
-    let globalData = [];
-    let charts = {}; // Store Chart.js instances to allow destroying/updating
+/**
+ * Default brand color configuration.
+ * Only 4 colors are used - all dashboard elements derive from these.
+ */
+const DEFAULT_BRAND_COLORS = {
+    primary: '#003665',      // Primary brand color (charts, KPI cards 1 & 3)
+    secondary: '#ff6600',    // Secondary/accent color (trend lines, KPI cards 2 & 4)
+    positive: '#10b981',     // Positive values (green) - gains, growth
+    negative: '#ef4444'      // Negative values (red) - losses, warnings
+};
 
-    // --- Utilities ---
-    const parseCurrency = (val) => {
-        if (typeof val === 'number') return val;
-        if (!val) return 0;
-        let clean = val.toString().replace(/,/g, '');
-        if (clean.includes('(') && clean.includes(')')) {
-            clean = '-' + clean.replace(/[()]/g, '');
-        }
-        return parseFloat(clean);
-    };
-
-    const formatCurrency = (num) => {
-        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(num);
-    };
-
-
-
-    // --- UI State Management ---
-    function setSourceStatus(isLive, message) {
-        const badge = document.getElementById('source-badge');
-        if (isLive) {
-            badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500"></span> Airtable`;
-        } else {
-            badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-yellow-500"></span> Static Data (Fallback)`;
-            document.getElementById('warning-message').classList.remove('hidden');
-            document.getElementById('warning-text').textContent = message || "Connection failed. Using static fallback data.";
-        }
-    }
-
-
-
-
-    // --- API Fetch Logic ---
-    async function fetchAirtableData() {
-        if (AIRTABLE_API_KEY.includes('YOUR_PERSONAL_ACCESS') || BASE_ID.includes('YOUR_BASE_ID')) {
-            console.warn("Airtable placeholders detected. No live data available.");
-            // Do not fall back to embeddedData; return an empty dataset and flag as not live.
-            return { data: [], isLive: false, error: "Credentials not configured" };
-        }
-
-        let allRecords = [];
-        let offset = null;
-        
+/**
+ * Gets the current brand colors (user-customized or defaults).
+ * Called dynamically to always get the latest saved colors.
+ * 
+ * @returns {Object} - Current brand color configuration
+ */
+function getBrandColors() {
+    const saved = getStoredValue(STORAGE_KEYS.BRAND_COLORS);
+    if (saved) {
         try {
-            do {
-                let url = `https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE_ID)}`;
-                if (offset) url += `?offset=${offset}`;
-
-                const response = await fetch(url, {
-                    headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`API Error: ${response.status} ${response.statusText}`);
-                }
-
-                const data = await response.json();
-                const pageRecords = data.records.map(r => r.fields);
-                allRecords = [...allRecords, ...pageRecords];
-                offset = data.offset;
-            } while (offset);
-
-            return { data: allRecords, isLive: true };
-
-        } catch (error) {
-            console.error("Airtable fetch failed:", error);
-            // Do not use embedded fallback data — return an empty dataset and surface the error
-            return { data: [], isLive: false, error: error.message };
+            return { ...DEFAULT_BRAND_COLORS, ...JSON.parse(saved) };
+        } catch (e) {
+            console.warn('Failed to parse saved brand colors:', e);
         }
     }
+    return { ...DEFAULT_BRAND_COLORS };
+}
 
+/**
+ * Chart.js color palette - derived from the 4 brand colors.
+ * Creates a cohesive palette for charts with multiple categories.
+ * Generates variations of the 4 base colors for pie/doughnut charts.
+ */
+function getChartColors() {
+    const brand = getBrandColors();
+    
+    // Helper function to lighten a hex color
+    function lightenColor(hex, percent) {
+        const num = parseInt(hex.replace('#', ''), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = Math.min(255, (num >> 16) + amt);
+        const G = Math.min(255, (num >> 8 & 0x00FF) + amt);
+        const B = Math.min(255, (num & 0x0000FF) + amt);
+        return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+    }
+    
+    // Helper function to darken a hex color
+    function darkenColor(hex, percent) {
+        const num = parseInt(hex.replace('#', ''), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = Math.max(0, (num >> 16) - amt);
+        const G = Math.max(0, (num >> 8 & 0x00FF) - amt);
+        const B = Math.max(0, (num & 0x0000FF) - amt);
+        return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+    }
+    
+    // Generate shades of primary color for Fund Type chart
+    const primaryShades = [
+        darkenColor(brand.primary, 20),    // Darkest
+        darkenColor(brand.primary, 10),
+        brand.primary,                      // Base
+        lightenColor(brand.primary, 15),
+        lightenColor(brand.primary, 30),
+        lightenColor(brand.primary, 45),
+        lightenColor(brand.primary, 55),
+        lightenColor(brand.primary, 65)     // Lightest
+    ];
+    
+    return {
+        primary: brand.primary,
+        secondary: brand.secondary,
+        success: brand.positive,
+        danger: brand.negative,
+        // Fund Type chart uses shades of primary color
+        pieColors: primaryShades,
+        // Purpose chart uses secondary color variations
+        purposeColors: [
+            brand.secondary,
+            brand.primary,
+            brand.positive,
+            brand.negative,
+            lightenColor(brand.secondary, 30),
+            lightenColor(brand.primary, 30)
+        ]
+    };
+}
 
+/**
+ * Field mappings for Airtable data.
+ * Update these if your Airtable field names differ.
+ */
+const FIELD_NAMES = {
+    date: 'Date',
+    fundId: 'Fund ID',
+    fundName: 'Fund Name',
+    fundType: 'Fund Type',
+    purpose: 'Purpose',
+    operatingUnit: 'College',
+    reportingUnit: 'School',
+    beginningMV: 'Beginning MV',
+    endingMV: 'Ending MV',
+    beginningHistoricalGift: 'Beginning Historical Gift',
+    endingHistoricalGift: 'Ending Historical Gift',
+    realizedGains: 'Realized Gains',
+    unrealizedGains: 'Unrealized Gains',
+    investmentFees: 'Investment Fees',
+    income: 'Income',
+    giftsAll: 'Gifts All',
+    distributionsAll: 'Distributions All',
+    expensesAll: 'Expenses All',
+    incomeToPrincipal: 'Income to Principal',
+    transfersAll: 'Transfers All',
+    // Net Asset Classification - used to categorize records
+    netAssetClassification: 'Net Asset Classification'
+};
 
+// ============================================================================
+// SECTION 2: GLOBAL STATE MANAGEMENT
+// ============================================================================
 
-    // --- Initialization & Main Logic ---
-    function initDashboard(rawData) {
-        if (!rawData || rawData.length === 0) return;
-        globalData = rawData;
+/**
+ * Global application state.
+ * Maintains data and chart instances for the dashboard.
+ */
+let globalData = [];           // All fetched records from Airtable
+let charts = {};               // Chart.js instances (for updating/destroying)
 
-        // 1. Populate Date Dropdown
-        const uniqueDates = [...new Set(rawData.map(d => d["Date"]))].sort((a,b) => new Date(b) - new Date(a));
-        const dateSelect = document.getElementById('date-filter');
-        dateSelect.innerHTML = uniqueDates.map(d => `<option value="${d}">${d}</option>`).join('');
+/**
+ * Filter and pagination state.
+ */
+let filteredTableData = [];    // Data after applying filters (for table)
+let currentPage = 1;           // Current page number
+let rowsPerPage = 10;          // Rows per page (default 10)
+let tableSearchQuery = '';     // Current search query for table
 
-        // 2. Render Trend Chart (Runs Once - Uses ALL Data)
-        renderTrendChart(rawData);
+// ============================================================================
+// SECTION 3: UTILITY FUNCTIONS
+// ============================================================================
 
-        // 3. Initial Render of Date-Specific Views (Uses Latest Date)
-        updateDateSpecificViews(uniqueDates[0]);
+/**
+ * Parses a currency string or number into a float.
+ * Handles formats like "$1,234.56", "(1,234.56)" for negatives, etc.
+ * 
+ * @param {string|number} val - The value to parse
+ * @returns {number} - Parsed numeric value
+ */
+function parseCurrency(val) {
+    if (typeof val === 'number') return val;
+    if (!val) return 0;
+    
+    let clean = val.toString().replace(/[$,]/g, '');
+    
+    // Handle accounting format negatives: (1234) -> -1234
+    if (clean.includes('(') && clean.includes(')')) {
+        clean = '-' + clean.replace(/[()]/g, '');
+    }
+    
+    return parseFloat(clean) || 0;
+}
 
-        // 4. Add Event Listener for Filter
-        dateSelect.addEventListener('change', (e) => {
-            updateDateSpecificViews(e.target.value);
+/**
+ * Formats a number as USD currency (no decimals).
+ * 
+ * @param {number} num - The number to format
+ * @returns {string} - Formatted currency string
+ */
+function formatCurrency(num) {
+    return new Intl.NumberFormat('en-US', { 
+        style: 'currency', 
+        currency: 'USD', 
+        maximumFractionDigits: 0 
+    }).format(num);
+}
+
+/**
+ * Formats a date string to "MMM YYYY" format.
+ * 
+ * @param {string} dateStr - Date string in MM/DD/YYYY format
+ * @returns {string} - Formatted date string
+ */
+function formatDateLabel(dateStr) {
+    const dateObj = new Date(dateStr);
+    return dateObj.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+}
+
+/**
+ * Safely retrieves a value from localStorage.
+ * 
+ * @param {string} key - The storage key
+ * @returns {string|null} - The stored value or null
+ */
+function getStoredValue(key) {
+    try {
+        return localStorage.getItem(key);
+    } catch (e) {
+        console.warn('localStorage not available:', e);
+        return null;
+    }
+}
+
+/**
+ * Safely stores a value in localStorage.
+ * 
+ * @param {string} key - The storage key
+ * @param {string} value - The value to store
+ */
+function setStoredValue(key, value) {
+    try {
+        localStorage.setItem(key, value);
+    } catch (e) {
+        console.warn('localStorage not available:', e);
+    }
+}
+
+/**
+ * Removes a value from localStorage.
+ * 
+ * @param {string} key - The storage key
+ */
+function removeStoredValue(key) {
+    try {
+        localStorage.removeItem(key);
+    } catch (e) {
+        console.warn('localStorage not available:', e);
+    }
+}
+
+// ============================================================================
+// SECTION 3B: DASHBOARD TITLE MANAGEMENT
+// ============================================================================
+
+/**
+ * Loads the saved dashboard title from localStorage.
+ * Called on page load.
+ */
+function loadDashboardTitle() {
+    const savedTitle = getStoredValue(STORAGE_KEYS.DASHBOARD_TITLE);
+    if (savedTitle) {
+        document.getElementById('dashboard-title').textContent = savedTitle;
+        document.title = savedTitle; // Also update browser tab title
+    }
+}
+
+/**
+ * Saves the dashboard title to localStorage.
+ * Called when the title loses focus.
+ */
+function saveDashboardTitle() {
+    const titleElement = document.getElementById('dashboard-title');
+    const newTitle = titleElement.textContent.trim();
+    
+    // Don't save empty titles
+    if (!newTitle) {
+        titleElement.textContent = 'Endowment Performance Dashboard';
+        setStoredValue(STORAGE_KEYS.DASHBOARD_TITLE, 'Endowment Performance Dashboard');
+        return;
+    }
+    
+    setStoredValue(STORAGE_KEYS.DASHBOARD_TITLE, newTitle);
+    document.title = newTitle; // Also update browser tab title
+}
+
+/**
+ * Handles keyboard events on the editable title.
+ * Enter key saves and blurs, Escape cancels changes.
+ * 
+ * @param {KeyboardEvent} event - The keyboard event
+ */
+function handleTitleKeydown(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        event.target.blur(); // This triggers saveDashboardTitle via onblur
+    } else if (event.key === 'Escape') {
+        // Restore saved title
+        const savedTitle = getStoredValue(STORAGE_KEYS.DASHBOARD_TITLE) || 'Endowment Performance Dashboard';
+        event.target.textContent = savedTitle;
+        event.target.blur();
+    }
+}
+
+// ============================================================================
+// SECTION 4: API CONFIGURATION MODAL
+// ============================================================================
+
+/**
+ * Opens the API configuration modal and populates with saved credentials.
+ */
+function openConfigModal() {
+    const modal = document.getElementById('api-config-modal');
+    const apiKeyInput = document.getElementById('api-key-input');
+    const baseIdInput = document.getElementById('base-id-input');
+    const tableIdInput = document.getElementById('table-id-input');
+    
+    // Pre-fill with saved values if available
+    apiKeyInput.value = getStoredValue(STORAGE_KEYS.API_KEY) || '';
+    baseIdInput.value = getStoredValue(STORAGE_KEYS.BASE_ID) || '';
+    tableIdInput.value = getStoredValue(STORAGE_KEYS.TABLE_ID) || '';
+    
+    modal.classList.remove('hidden');
+    apiKeyInput.focus();
+}
+
+/**
+ * Closes the API configuration modal.
+ */
+function closeConfigModal() {
+    document.getElementById('api-config-modal').classList.add('hidden');
+}
+
+// ============================================================================
+// CALENDLY DEMO MODAL FUNCTIONS
+// ============================================================================
+/**
+ * These functions manage the Calendly demo booking popup modal.
+ * The modal appears once per session after 30 seconds to encourage
+ * users to book a demo call.
+ */
+
+// Storage key for tracking if modal has been shown this session
+const CALENDLY_SHOWN_KEY = 'calendly_modal_shown';
+
+/**
+ * Opens the Calendly demo booking modal with animation.
+ * Only shows if not already shown this session.
+ */
+function openCalendlyModal() {
+    // Check if modal was already shown this session
+    if (sessionStorage.getItem(CALENDLY_SHOWN_KEY)) {
+        return; // Don't show again
+    }
+    
+    const modal = document.getElementById('calendly-modal');
+    const content = document.getElementById('calendly-modal-content');
+    
+    // Show modal container
+    modal.classList.remove('hidden');
+    
+    // Trigger animation after a brief delay
+    requestAnimationFrame(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+    });
+    
+    // Mark as shown for this session
+    sessionStorage.setItem(CALENDLY_SHOWN_KEY, 'true');
+}
+
+/**
+ * Closes the Calendly demo booking modal with animation.
+ * 
+ * @param {Event} event - Optional click event (for backdrop clicks)
+ */
+function closeCalendlyModal(event) {
+    // If event exists and target is not the backdrop, do nothing
+    if (event && event.target !== event.currentTarget) {
+        return;
+    }
+    
+    const modal = document.getElementById('calendly-modal');
+    const content = document.getElementById('calendly-modal-content');
+    
+    // Animate out
+    content.classList.remove('scale-100', 'opacity-100');
+    content.classList.add('scale-95', 'opacity-0');
+    
+    // Hide modal after animation completes
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 200);
+}
+
+/**
+ * Initializes the Calendly popup timer.
+ * Shows the modal after 30 seconds if not already shown this session.
+ */
+function initCalendlyPopup() {
+    // Don't initialize if already shown this session
+    if (sessionStorage.getItem(CALENDLY_SHOWN_KEY)) {
+        return;
+    }
+    
+    // Show modal after 10 seconds (10000 milliseconds)
+    setTimeout(() => {
+        openCalendlyModal();
+    }, 10000);
+}
+
+/**
+ * Saves API configuration and reloads data.
+ * 
+ * @param {Event} event - Form submit event
+ */
+function saveApiConfig(event) {
+    event.preventDefault();
+    
+    const apiKey = document.getElementById('api-key-input').value.trim();
+    const baseId = document.getElementById('base-id-input').value.trim();
+    const tableId = document.getElementById('table-id-input').value.trim();
+    
+    // Validate inputs
+    if (!apiKey || !baseId || !tableId) {
+        alert('Please fill in all fields.');
+        return;
+    }
+    
+    // Store credentials
+    setStoredValue(STORAGE_KEYS.API_KEY, apiKey);
+    setStoredValue(STORAGE_KEYS.BASE_ID, baseId);
+    setStoredValue(STORAGE_KEYS.TABLE_ID, tableId);
+    
+    closeConfigModal();
+    
+    // Reload dashboard with new credentials
+    location.reload();
+}
+
+/**
+ * Clears saved API credentials and reloads.
+ */
+function clearApiConfig() {
+    if (confirm('Are you sure you want to clear your saved API credentials?')) {
+        removeStoredValue(STORAGE_KEYS.API_KEY);
+        removeStoredValue(STORAGE_KEYS.BASE_ID);
+        removeStoredValue(STORAGE_KEYS.TABLE_ID);
+        
+        closeConfigModal();
+        location.reload();
+    }
+}
+
+// ============================================================================
+// SECTION 4B: BRAND COLORS CONFIGURATION MODAL
+// ============================================================================
+
+/**
+ * Color input field mappings for the brand colors form.
+ * Only 4 colors: primary, secondary, positive, negative.
+ */
+const COLOR_FIELD_MAPPINGS = [
+    { id: 'primary', key: 'primary', previewId: 'preview-primary' },
+    { id: 'secondary', key: 'secondary', previewId: 'preview-secondary' },
+    { id: 'positive', key: 'positive', previewId: 'preview-positive' },
+    { id: 'negative', key: 'negative', previewId: 'preview-negative' }
+];
+
+/**
+ * Opens the brand colors configuration modal.
+ * Populates fields with current saved colors or defaults.
+ */
+function openBrandColorsModal() {
+    const modal = document.getElementById('brand-colors-modal');
+    const currentColors = getBrandColors();
+    
+    // Populate each color input field
+    COLOR_FIELD_MAPPINGS.forEach(({ id, key }) => {
+        const colorPicker = document.getElementById(`color-${id}`);
+        const hexInput = document.getElementById(`color-${id}-hex`);
+        
+        if (colorPicker && hexInput) {
+            colorPicker.value = currentColors[key];
+            hexInput.value = currentColors[key];
+            
+            // Set up two-way sync between color picker and hex input
+            colorPicker.addEventListener('input', () => {
+                hexInput.value = colorPicker.value;
+                updateColorPreview();
+            });
+            
+            hexInput.addEventListener('input', () => {
+                if (/^#[0-9A-Fa-f]{6}$/.test(hexInput.value)) {
+                    colorPicker.value = hexInput.value;
+                    updateColorPreview();
+                }
+            });
+        }
+    });
+    
+    updateColorPreview();
+    modal.classList.remove('hidden');
+}
+
+/**
+ * Closes the brand colors configuration modal.
+ */
+function closeBrandColorsModal() {
+    document.getElementById('brand-colors-modal').classList.add('hidden');
+}
+
+/**
+ * Updates the color preview squares in the modal.
+ */
+function updateColorPreview() {
+    COLOR_FIELD_MAPPINGS.forEach(({ id, previewId }) => {
+        const colorPicker = document.getElementById(`color-${id}`);
+        const preview = document.getElementById(previewId);
+        
+        if (colorPicker && preview) {
+            preview.style.backgroundColor = colorPicker.value;
+        }
+    });
+}
+
+/**
+ * Saves brand colors and refreshes the dashboard.
+ * 
+ * @param {Event} event - Form submit event
+ */
+function saveBrandColors(event) {
+    event.preventDefault();
+    
+    const colors = {};
+    
+    // Collect all color values
+    COLOR_FIELD_MAPPINGS.forEach(({ id, key }) => {
+        const hexInput = document.getElementById(`color-${id}-hex`);
+        if (hexInput && hexInput.value) {
+            colors[key] = hexInput.value;
+        }
+    });
+    
+    // Save to localStorage
+    setStoredValue(STORAGE_KEYS.BRAND_COLORS, JSON.stringify(colors));
+    
+    closeBrandColorsModal();
+    
+    // Refresh charts and metrics with new colors
+    if (globalData.length > 0) {
+        const selectedDate = document.getElementById('date-filter').value;
+        renderTrendChart(globalData);
+        updateDateSpecificViews(selectedDate);
+    }
+    
+    // Show confirmation
+    showToast('Brand colors saved successfully!');
+}
+
+/**
+ * Resets brand colors to defaults.
+ */
+function resetBrandColors() {
+    if (confirm('Reset all colors to default values?')) {
+        removeStoredValue(STORAGE_KEYS.BRAND_COLORS);
+        
+        // Repopulate form with defaults
+        COLOR_FIELD_MAPPINGS.forEach(({ id, key }) => {
+            const colorPicker = document.getElementById(`color-${id}`);
+            const hexInput = document.getElementById(`color-${id}-hex`);
+            
+            if (colorPicker && hexInput) {
+                colorPicker.value = DEFAULT_BRAND_COLORS[key];
+                hexInput.value = DEFAULT_BRAND_COLORS[key];
+            }
         });
+        
+        updateColorPreview();
+    }
+}
 
-        // 5. Show Content
-        document.getElementById('loading-indicator').classList.add('hidden');
-        document.getElementById('dashboard-content').classList.remove('hidden');
+/**
+ * Shows a temporary toast notification.
+ * 
+ * @param {string} message - Message to display
+ */
+function showToast(message) {
+    // Remove existing toast if present
+    const existingToast = document.getElementById('toast-notification');
+    if (existingToast) existingToast.remove();
+    
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.id = 'toast-notification';
+    toast.className = 'fixed bottom-4 right-4 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg z-50 fade-in';
+    toast.textContent = message;
+    
+    document.body.appendChild(toast);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// ============================================================================
+// SECTION 5: UI STATE MANAGEMENT
+// ============================================================================
+
+/**
+ * Updates the data source status badge in the header.
+ * 
+ * @param {boolean} isLive - Whether connected to live Airtable data
+ * @param {string} message - Optional message for error states
+ */
+function setSourceStatus(isLive, message) {
+    const badge = document.getElementById('source-badge');
+    
+    if (isLive) {
+        badge.className = 'status-badge status-badge-success';
+        badge.innerHTML = `
+            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse" aria-hidden="true"></span> 
+            Airtable (Live)
+        `;
+        
+        // Update last updated timestamp
+        const lastUpdated = document.getElementById('last-updated');
+        if (lastUpdated) {
+            lastUpdated.textContent = new Date().toLocaleString();
+        }
+    } else {
+        badge.className = 'status-badge status-badge-warning';
+        badge.innerHTML = `
+            <span class="w-2 h-2 rounded-full bg-yellow-500" aria-hidden="true"></span> 
+            Not Connected
+        `;
+        
+        // Show warning message
+        document.getElementById('warning-message').classList.remove('hidden');
+        document.getElementById('warning-text').textContent = 
+            message || 'Please configure your Airtable API credentials.';
+    }
+}
+
+/**
+ * Shows the loading indicator.
+ */
+function showLoading() {
+    document.getElementById('loading-indicator').classList.remove('hidden');
+    document.getElementById('dashboard-content').classList.add('hidden');
+}
+
+/**
+ * Hides the loading indicator and shows the dashboard.
+ */
+function hideLoading() {
+    document.getElementById('loading-indicator').classList.add('hidden');
+    document.getElementById('dashboard-content').classList.remove('hidden');
+}
+
+// ============================================================================
+// SECTION 6: AIRTABLE API INTEGRATION
+// ============================================================================
+
+/**
+ * Fetches data from Airtable using stored credentials.
+ * Handles pagination to retrieve all records.
+ * 
+ * @returns {Promise<Object>} - Object with data array, isLive flag, and optional error
+ */
+async function fetchAirtableData() {
+    // Retrieve stored credentials
+    const apiKey = getStoredValue(STORAGE_KEYS.API_KEY);
+    const baseId = getStoredValue(STORAGE_KEYS.BASE_ID);
+    const tableId = getStoredValue(STORAGE_KEYS.TABLE_ID);
+    
+    // Debug logging
+    console.log('API Key exists:', !!apiKey);
+    console.log('Base ID:', baseId);
+    console.log('Table ID:', tableId);
+    
+    // Check if credentials are configured
+    if (!apiKey || !baseId || !tableId) {
+        console.warn('Airtable credentials not configured.');
+        return { 
+            data: [], 
+            isLive: false, 
+            error: 'API credentials not configured. Click "Configure API" to set up your connection.' 
+        };
     }
 
+    let allRecords = [];
+    let offset = null;
+    
+    try {
+        // Paginate through all records
+        do {
+            let url = `https://api.airtable.com/v0/${baseId}/${encodeURIComponent(tableId)}`;
+            if (offset) url += `?offset=${offset}`;
 
-    // --- View Updater ---
-    function updateDateSpecificViews(selectedDate) {
-        // Filter data for the selected date
-        const periodData = globalData.filter(d => d["Date"] === selectedDate);
-        
-        // Update the selected date display
-        document.getElementById('selectedDate').textContent = selectedDate;
-        
-        // Format date from MM/DD/YYYY to MMM YYYY
-        const formattedDateObj = new Date(selectedDate);
-        const formattedDate = formattedDateObj.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-               
+            console.log('Fetching from Airtable:', url.replace(baseId, 'BASE_ID'));
 
-        // Update components
-        renderMetrics(periodData, selectedDate);
-        renderClassificationChart(periodData);
-        renderPurposeChart(periodData);
-        renderGainsChart(periodData);
-        renderTopFundsTable(periodData);
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: { 
+                    'Authorization': `Bearer ${apiKey}`
+                }
+            });
 
-            // Update all elements with the class 'formatted-date'
-        document.querySelectorAll('.formatted-date').forEach(el => {
-            el.textContent = formattedDate;
-        });
+            console.log('Airtable response status:', response.status);
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Airtable error response:', errorData);
+                throw new Error(
+                    errorData.error?.message || 
+                    `API Error: ${response.status} ${response.statusText}`
+                );
+            }
+
+            const data = await response.json();
+            const pageRecords = data.records.map(r => r.fields);
+            allRecords = [...allRecords, ...pageRecords];
+            offset = data.offset;
+            
+        } while (offset);
+
+        console.log(`Successfully fetched ${allRecords.length} records from Airtable.`);
+        return { data: allRecords, isLive: true };
+
+    } catch (error) {
+        console.error('Airtable fetch failed:', error);
+        return { 
+            data: [], 
+            isLive: false, 
+            error: error.message 
+        };
+    }
+}
+
+// ============================================================================
+// SECTION 7: DASHBOARD INITIALIZATION
+// ============================================================================
+
+/**
+ * Initializes the dashboard with fetched data.
+ * Sets up date filtering and renders all components.
+ * 
+ * @param {Array} rawData - Array of fund records from Airtable
+ */
+function initDashboard(rawData) {
+    if (!rawData || rawData.length === 0) {
+        console.warn('No data available to display.');
+        return;
+    }
+    
+    globalData = rawData;
+
+    // 1. Extract and sort unique dates (most recent first)
+    const uniqueDates = [...new Set(rawData.map(d => d[FIELD_NAMES.date]))]
+        .filter(Boolean)
+        .sort((a, b) => new Date(b) - new Date(a));
+    
+    if (uniqueDates.length === 0) {
+        console.error('No valid dates found in data.');
+        return;
     }
 
+    // 2. Populate date filter dropdown
+    const dateSelect = document.getElementById('date-filter');
+    dateSelect.innerHTML = uniqueDates
+        .map(d => `<option value="${d}">${d}</option>`)
+        .join('');
 
-    // --- Component Renderers ---
+    // 3. Populate filter panel dropdowns with unique values
+    populateFilterOptions(rawData);
+    
+    // 4. Set up table search event listener
+    const searchInput = document.getElementById('table-search');
+    searchInput.addEventListener('input', handleTableSearch);
 
-    function renderTrendChart(data) {
-        // Group by Date for the Line Chart
-        const groupedByDate = data.reduce((acc, curr) => {
-            if (!curr["Date"] || !curr["Ending MV"]) return acc;
-            if (!acc[curr["Date"]]) acc[curr["Date"]] = 0;
-            acc[curr["Date"]] += parseCurrency(curr["Ending MV"]);
-            return acc;
-        }, {});
-        
-        const sortedDates = Object.keys(groupedByDate).sort((a,b) => new Date(a) - new Date(b));
-        const trendValues = sortedDates.map(d => groupedByDate[d]);
+    // 5. Render trend chart (uses all historical data)
+    renderTrendChart(rawData);
 
+    // 6. Initial render with most recent date (triggers applyFilters)
+    updateDateSpecificViews(uniqueDates[0]);
 
-        const hggroupedByDate = data.reduce((acc, curr) => {
-            if (!curr["Date"] || !curr["Ending Historical Gift"]) return acc;
-            if (!acc[curr["Date"]]) acc[curr["Date"]] = 0;
-            acc[curr["Date"]] += parseCurrency(curr["Ending Historical Gift"]);
-            return acc;
-        }, {});
-        
-        const hgsortedDates = Object.keys(hggroupedByDate).sort((a,b) => new Date(a) - new Date(b));
-        const hgtrendValues = hgsortedDates.map(d => hggroupedByDate[d]);
+    // 7. Set up date filter event listener
+    dateSelect.addEventListener('change', (e) => {
+        updateDateSpecificViews(e.target.value);
+    });
 
-        const ctx = document.getElementById('trendChart').getContext('2d');
+    // 8. Show dashboard content
+    hideLoading();
+}
+
+/**
+ * Updates all date-specific dashboard views when a new date is selected.
+ * 
+ * @param {string} selectedDate - The selected date string
+ */
+function updateDateSpecificViews(selectedDate) {
+    // Filter data for selected period (base data before other filters)
+    const periodData = globalData.filter(d => d[FIELD_NAMES.date] === selectedDate);
+    
+    if (periodData.length === 0) {
+        console.warn(`No data found for date: ${selectedDate}`);
+        return;
+    }
+    
+    // Update header date display
+    document.getElementById('selectedDate').textContent = selectedDate;
+    
+    // Format date for chart subtitles
+    const formattedDate = formatDateLabel(selectedDate);
+    document.querySelectorAll('.formatted-date').forEach(el => {
+        el.textContent = formattedDate;
+    });
+
+    // Update total count for this period
+    document.getElementById('total-count').textContent = periodData.length;
+    
+    // Apply all filters (this handles rendering of all components)
+    applyFilters();
+}
+
+// ============================================================================
+// SECTION 8: COMPONENT RENDERERS - KPI METRICS
+// ============================================================================
+
+/**
+ * Renders the key performance indicator cards with period-over-period comparisons.
+ * Uses compact design following financial formatting best practices.
+ * 
+ * @param {Array} data - Filtered data for the selected period
+ */
+function renderMetrics(data) {
+    // Get current brand colors (only 4 colors)
+    const brandColors = getBrandColors();
+    
+    // Calculate current period totals
+    const totalMV = data.reduce((sum, item) => 
+        sum + parseCurrency(item[FIELD_NAMES.endingMV]), 0);
+    const totalHistoricalGift = data.reduce((sum, item) => 
+        sum + parseCurrency(item[FIELD_NAMES.endingHistoricalGift]), 0);
+    const totalFunds = data.length;
+    
+    // Calculate beginning period values for comparison
+    const beginningMV = data.reduce((sum, item) => 
+        sum + parseCurrency(item[FIELD_NAMES.beginningMV]), 0);
+    const beginningHistoricalGift = data.reduce((sum, item) => 
+        sum + parseCurrency(item[FIELD_NAMES.beginningHistoricalGift]), 0);
+    
+    // Calculate period-over-period changes
+    const mvChange = totalMV - beginningMV;
+    const mvChangePercent = beginningMV === 0 ? 0 : (mvChange / beginningMV) * 100;
+    
+    const hgChange = totalHistoricalGift - beginningHistoricalGift;
+    const hgChangePercent = beginningHistoricalGift === 0 ? 0 : (hgChange / beginningHistoricalGift) * 100;
+    
+    // Count underwater funds (MV < Historical Gift)
+    const underwaterFunds = data.filter(item => 
+        parseCurrency(item[FIELD_NAMES.endingMV]) < 
+        parseCurrency(item[FIELD_NAMES.endingHistoricalGift])
+    ).length;
+    const underwaterPercent = totalFunds === 0 ? 0 : (underwaterFunds / totalFunds) * 100;
+    
+    // Calculate net investment return
+    const netInvestmentReturn = data.reduce((sum, item) => 
+        sum + parseCurrency(item[FIELD_NAMES.realizedGains]) + 
+        parseCurrency(item[FIELD_NAMES.unrealizedGains]) + 
+        parseCurrency(item[FIELD_NAMES.income]) + 
+        parseCurrency(item[FIELD_NAMES.investmentFees]), 0);
+    const returnPercent = beginningMV === 0 ? 0 : (netInvestmentReturn / beginningMV) * 100;
+
+    // Helper function to format change indicator
+    function formatChange(value, isPercent = true) {
+        const isPositive = value >= 0;
+        const colorStyle = isPositive ? brandColors.positive : brandColors.negative;
+        const arrow = isPositive ? '▲' : '▼';
+        const formattedValue = isPercent 
+            ? `${isPositive ? '+' : ''}${value.toFixed(2)}%`
+            : formatCurrency(Math.abs(value));
         
-        //Ending Historical Gift
+        return `<span style="color: ${colorStyle}" class="font-semibold">${arrow} ${formattedValue}</span>`;
+    }
+
+    // Build metrics HTML with compact design
+    const metricsHtml = `
+        <!-- Total Market Value Card -->
+        <div class="card py-3 px-4 border-l-4" style="border-left-color: ${brandColors.primary}">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total Market Value</p>
+            <p class="text-lg font-bold text-gray-900 mt-1 tabular-nums">${formatCurrency(totalMV)}</p>
+            <div class="flex items-center gap-2 mt-1 text-xs">
+                ${formatChange(mvChangePercent)}
+                <span class="text-gray-400">vs last period</span>
+            </div>
+        </div>
         
+        <!-- Historical Gift Card -->
+        <div class="card py-3 px-4 border-l-4" style="border-left-color: ${brandColors.secondary}">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Historical Gift</p>
+            <p class="text-lg font-bold text-gray-900 mt-1 tabular-nums">${formatCurrency(totalHistoricalGift)}</p>
+            <div class="flex items-center gap-2 mt-1 text-xs">
+                ${formatChange(hgChangePercent)}
+                <span class="text-gray-400">vs last period</span>
+            </div>
+        </div>
         
-        // Trend chart is static, no need to store in 'charts' for updates
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: sortedDates.map(d => {
-                    const dateObj = new Date(d);
-                    return dateObj.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-                }),
-                datasets: [
-                    {
+        <!-- Net Investment Return Card -->
+        <div class="card py-3 px-4 border-l-4" style="border-left-color: ${netInvestmentReturn >= 0 ? brandColors.positive : brandColors.negative}">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Net Investment Return</p>
+            <p class="text-lg font-bold text-gray-900 mt-1 tabular-nums">${formatCurrency(netInvestmentReturn)}</p>
+            <div class="flex items-center gap-2 mt-1 text-xs">
+                ${formatChange(returnPercent)}
+                <span class="text-gray-400">return on beginning MV</span>
+            </div>
+        </div>
+        
+        <!-- Underwater Funds Card -->
+        <div class="card py-3 px-4 border-l-4" style="border-left-color: ${underwaterFunds > 0 ? brandColors.negative : brandColors.positive}">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Funds Underwater</p>
+            <p class="text-lg font-bold text-gray-900 mt-1">${underwaterFunds} <span class="text-sm font-normal text-gray-500">of ${totalFunds}</span></p>
+            <div class="flex items-center gap-2 mt-1 text-xs">
+                <span class="font-semibold" style="color: ${underwaterFunds > 0 ? brandColors.negative : brandColors.positive}">${underwaterPercent.toFixed(1)}%</span>
+                <span class="text-gray-400">of portfolio</span>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('metrics-container').innerHTML = metricsHtml;
+}
+
+// ============================================================================
+// SECTION 9: COMPONENT RENDERERS - CHARTS
+// ============================================================================
+
+/**
+ * Renders the market value trend line chart.
+ * This chart shows historical data across all periods.
+ * 
+ * @param {Array} data - Full dataset (all periods)
+ */
+function renderTrendChart(data) {
+    // Aggregate ending market value by date
+    const mvByDate = data.reduce((acc, curr) => {
+        const date = curr[FIELD_NAMES.date];
+        const mv = parseCurrency(curr[FIELD_NAMES.endingMV]);
+        if (!date) return acc;
+        acc[date] = (acc[date] || 0) + mv;
+        return acc;
+    }, {});
+    
+    // Aggregate historical gift by date
+    const hgByDate = data.reduce((acc, curr) => {
+        const date = curr[FIELD_NAMES.date];
+        const hg = parseCurrency(curr[FIELD_NAMES.endingHistoricalGift]);
+        if (!date) return acc;
+        acc[date] = (acc[date] || 0) + hg;
+        return acc;
+    }, {});
+    
+    // Sort dates chronologically
+    const sortedDates = Object.keys(mvByDate).sort((a, b) => new Date(a) - new Date(b));
+    const mvValues = sortedDates.map(d => mvByDate[d]);
+    const hgValues = sortedDates.map(d => hgByDate[d] || 0);
+    const dateLabels = sortedDates.map(formatDateLabel);
+
+    const ctx = document.getElementById('trendChart').getContext('2d');
+    
+    // Destroy existing chart if present
+    if (charts['trend']) {
+        charts['trend'].destroy();
+    }
+    
+    // Get current brand colors for dynamic theming
+    const brandColors = getBrandColors();
+    
+    // Convert hex to rgba for fill backgrounds
+    const hexToRgba = (hex, alpha) => {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    };
+    
+    charts['trend'] = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dateLabels,
+            datasets: [
+                {
                     label: 'Total Market Value',
-                    data: trendValues,
-                    borderColor: '#ff6600',
-                    backgroundColor: 'rgba(255, 102, 0, 0.1)',
+                    data: mvValues,
+                    borderColor: brandColors.secondary,
+                    backgroundColor: hexToRgba(brandColors.secondary, 0.1),
                     tension: 0.3,
-                    fill: true
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 },
                 {
                     label: 'Historical Gift',
-                    data: hgtrendValues,
-                    borderColor: '#003665',
-                    backgroundColor: 'rgba(0, 54, 101, 0.1)',
+                    data: hgValues,
+                    borderColor: brandColors.primary,
+                    backgroundColor: hexToRgba(brandColors.primary, 0.1),
                     tension: 0.3,
-                    fill: true
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 }
-            
             ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index'
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: true, position: 'bottom' } },
-                scales: {
-                    y: { beginAtZero: true, ticks: { callback: (val) => '$' + (val/1000000).toFixed(0) + 'M'} },
-                    // x: { ticks: { font: {weight: 'bold'}}}
+            plugins: { 
+                legend: { 
+                    display: true, 
+                    position: 'bottom' 
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => `${context.dataset.label}: ${formatCurrency(context.raw)}`
+                    }
+                }
+            },
+            scales: {
+                y: { 
+                    beginAtZero: true, 
+                    ticks: { 
+                        callback: (val) => '$' + (val / 1000000).toFixed(0) + 'M'
+                    }
                 }
             }
-        });
-    }
+        }
+    });
+}
 
-    function renderMetrics(data, dateLabel) {
-        const totalMV = data.reduce((sum, item) => sum + parseCurrency(item["Ending MV"]), 0);
-        const totalRealized = data.reduce((sum, item) => sum + parseCurrency(item["Realized Gains"]), 0);
-        const totalHistoricalgift = data.reduce((sum, item) => sum + parseCurrency(item["Ending Historical Gift"]), 0);
-        const totalFunds = data.length;
-        const kpimv = data.reduce((sum, item) => sum + parseCurrency(item["Ending MV"]), 0);
-        const kpistart = data.reduce((sum, item) => sum + parseCurrency(item["Beginning MV"]), 0);
-        const kpichange = kpistart === 0 ? 0 : ((kpimv - kpistart) / kpistart) * 100;
-
-        const metricsHtml = `
-            <div class="card border-l-4 border-t-4 border-blue-900">
-                <p class="text-m text-gray-700 font-bold">Total Market Value</p>
-                <p class="text-gray-500 mt-1 text-xs"><span class="formatted-date"></span></p>
-                <p class="text-2xl font-medium text-gray-800 mt-1">${formatCurrency(totalMV)}</p>
-                <p class="text-xs text-gray-500 mt-1 font-medium"><span class="${kpichange >= 0 ? 'text-green-600' : 'text-red-600'} font-bold">${kpichange.toFixed(2)}%</span> vs last period</p>
-            </div>
-            <div class="card border-l-4 border-t-4 border-orange-500">
-                <p class="text-m text-gray-700 font-bold">Historical Gift</p>
-                <p class="text-gray-500 mt-1 text-xs"><span class="formatted-date"></span></p>
-                <p class="text-2xl font-medium text-gray-800 mt-1">${formatCurrency(totalHistoricalgift)}</p>
-            </div>
-            <div class="card border-l-4 border-t-4 border-blue-500">
-                <p class="text-m text-gray-700 font-bold">Total Funds Managed</p>
-                <p class="text-gray-500 mt-1 text-xs"><span class="formatted-date"></span></p>
-                <p class="text-2xl font-medium text-gray-800 mt-1">${totalFunds}</p>
-            </div>
-                <div class="card border-l-4 border-t-4 border-red-400">
-                <p class="text-m text-gray-700 font-bold">Funds Underwater</p>
-                <p class="text-gray-500 mt-1 text-xs"><span class="formatted-date"></span></p>
-                <p class="text-2xl font-medium text-gray-800 mt-1">1</p>
-            </div>
-        `;
-        document.getElementById('metrics-container').innerHTML = metricsHtml;
-    }
-
-    function renderClassificationChart(data) {
-        const ctx = document.getElementById('classificationChart');
-        if (charts['classification']) charts['classification'].destroy();
-
-        const fundtypeData = data.reduce((acc, curr) => {
-            const type = curr["Fund Type"] || "Other";
-            if (!acc[type]) acc[type] = 0;
-            acc[type] += parseCurrency(curr["Ending MV"]);
-            return acc;
-        }, {});
-
-        charts['classification'] = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(fundtypeData),
-                datasets: [{
-                    data: Object.values(fundtypeData),
-                    backgroundColor: ['#003665', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6'],
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'right' } }
-            }
-        });
-    }
-
-    function renderPurposeChart(data) {
-        const ctx = document.getElementById('purposeChart');
-        if (charts['purpose']) charts['purpose'].destroy();
-
-        const purposeData = data.reduce((acc, curr) => {
-            const type = curr["Purpose"] || "Other";
-            if (!acc[type]) acc[type] = 0;
-            acc[type] += parseCurrency(curr["Ending MV"]);
-            return acc;
-        }, {});
-
-        const purposeDataArray = Object.keys(purposeData).map(key => ({
-            label: key,
-            value: purposeData[key]
-        }));
+/**
+ * Renders the fund type distribution doughnut chart.
+ * Derives 6 segment colors from the 4 brand colors.
+ * 
+ * @param {Array} data - Filtered data for selected period
+ */
+function renderClassificationChart(data) {
+    const ctx = document.getElementById('classificationChart');
     
-        purposeDataArray.sort((a, b) => b.value - a.value);
-        const sortedLabels = purposeDataArray.map(item => item.label);
-        const sortedValues = purposeDataArray.map(item => item.value);
+    // Destroy existing chart if present
+    if (charts['classification']) {
+        charts['classification'].destroy();
+    }
 
-        charts['purpose'] = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: sortedLabels,
-                datasets: [{
-                    label: 'Market Value',
-                    data: sortedValues,
-                    backgroundColor: '#007DB8',
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { ticks: { callback: (val) => '$' + (val/1000000).toFixed(1) + 'M' } }
+    // Aggregate by fund type
+    const fundTypeData = data.reduce((acc, curr) => {
+        const type = curr[FIELD_NAMES.fundType] || 'Other';
+        const mv = parseCurrency(curr[FIELD_NAMES.endingMV]);
+        acc[type] = (acc[type] || 0) + mv;
+        return acc;
+    }, {});
+
+    // Get current brand colors and derive a 6-color palette
+    const chartColors = getChartColors();
+    
+    charts['classification'] = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(fundTypeData),
+            datasets: [{
+                data: Object.values(fundTypeData),
+                backgroundColor: chartColors.pieColors,
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { 
+                legend: { 
+                    position: 'right',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((context.raw / total) * 100).toFixed(1);
+                            return `${context.label}: ${formatCurrency(context.raw)} (${percentage}%)`;
+                        }
+                    }
                 }
             }
-        });
+        }
+    });
+}
+
+/**
+ * Renders the market value by purpose bar chart.
+ * Uses secondary brand color for bars.
+ * 
+ * @param {Array} data - Filtered data for selected period
+ */
+function renderPurposeChart(data) {
+    const ctx = document.getElementById('purposeChart');
+    
+    // Destroy existing chart if present
+    if (charts['purpose']) {
+        charts['purpose'].destroy();
     }
 
-    function renderGainsChart(data) {
-        const ctx = document.getElementById('gainsChart');
-        if (charts['gains']) charts['gains'].destroy();
+    // Aggregate by purpose - track both market value and fund count
+    const purposeData = data.reduce((acc, curr) => {
+        const purpose = curr[FIELD_NAMES.purpose] || 'Other';
+        const mv = parseCurrency(curr[FIELD_NAMES.endingMV]);
+        if (!acc[purpose]) {
+            acc[purpose] = { mv: 0, count: 0 };
+        }
+        acc[purpose].mv += mv;
+        acc[purpose].count += 1;
+        return acc;
+    }, {});
 
-        const totalRealized = data.reduce((sum, item) => sum + parseCurrency(item["Realized Gains"]), 0);
-        const totalUnrealized = data.reduce((sum, item) => sum + parseCurrency(item["Unrealized Gains"]), 0);
+    // Sort by value descending
+    const sortedEntries = Object.entries(purposeData)
+        .sort(([, a], [, b]) => b.mv - a.mv);
+    
+    const sortedLabels = sortedEntries.map(([label]) => label);
+    const sortedValues = sortedEntries.map(([, data]) => data.mv);
+    const sortedCounts = sortedEntries.map(([, data]) => data.count);
 
-        charts['gains'] = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Realized Gains', 'Unrealized Gains'],
-                datasets: [{
-                    label: 'USD Amount',
-                    data: [totalRealized, totalUnrealized],
-                    backgroundColor: ['#3b82f6', '#10b981'],
-                    borderRadius: 4
-                }]
+    // Get current brand colors (only 4 colors)
+    const brandColors = getBrandColors();
+    
+    charts['purpose'] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: sortedLabels,
+            datasets: [{
+                label: 'Market Value',
+                data: sortedValues,
+                backgroundColor: brandColors.secondary,
+                borderRadius: 4,
+                borderSkipped: false,
+                fundCounts: sortedCounts  // Store counts for tooltip access
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => {
+                            const value = formatCurrency(context.raw);
+                            const count = context.dataset.fundCounts[context.dataIndex];
+                            return [
+                                `Market Value: ${value}`,
+                                `Fund Count: ${count} fund${count !== 1 ? 's' : ''}`
+                            ];
+                        }
+                    }
+                }
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } }
+            scales: {
+                y: { 
+                    ticks: { 
+                        callback: (val) => '$' + (val / 1000000).toFixed(1) + 'M' 
+                    }
+                },
+                x: {
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 0
+                    }
+                }
             }
+        }
+    });
+}
+
+/**
+ * Renders the Market Value Rollforward financial summary.
+ * Shows a structured income statement style view of the period activity.
+ * Displays three columns: Without Donor Restriction, With Donor Restriction, and Total.
+ * Filters records by the 'Net Asset Classification' column to determine which column they belong to.
+ * 
+ * @param {Array} data - Filtered data for selected period
+ */
+function renderRollforwardSummary(data) {
+    const container = document.getElementById('rollforward-summary');
+    
+    // Filter data by Net Asset Classification
+    const wodrData = data.filter(item => 
+        item[FIELD_NAMES.netAssetClassification] === 'Without Donor Restriction'
+    );
+    const wdrData = data.filter(item => 
+        item[FIELD_NAMES.netAssetClassification] === 'With Donor Restriction'
+    );
+    const dueToFromData = data.filter(item => 
+        item[FIELD_NAMES.netAssetClassification] === 'Due To/From'
+    );
+    
+    // Helper function to sum a field across a dataset
+    const sumField = (dataset, field) => dataset.reduce((sum, item) => sum + parseCurrency(item[field]), 0);
+    
+    // Check if NAC data exists
+    const hasNACData = data.length > 0 && data.some(item => 
+        item[FIELD_NAMES.netAssetClassification] !== undefined && 
+        item[FIELD_NAMES.netAssetClassification] !== ''
+    );
+    
+    // Calculate WODR totals
+    const beginningMV_WODR = sumField(wodrData, FIELD_NAMES.beginningMV);
+    const realizedGains_WODR = sumField(wodrData, FIELD_NAMES.realizedGains);
+    const unrealizedGains_WODR = sumField(wodrData, FIELD_NAMES.unrealizedGains);
+    const investmentFees_WODR = sumField(wodrData, FIELD_NAMES.investmentFees);
+    const income_WODR = sumField(wodrData, FIELD_NAMES.income);
+    const gifts_WODR = sumField(wodrData, FIELD_NAMES.giftsAll);
+    const distributions_WODR = sumField(wodrData, FIELD_NAMES.distributionsAll);
+    const expenses_WODR = sumField(wodrData, FIELD_NAMES.expensesAll);
+    const incomeToPrincipal_WODR = sumField(wodrData, FIELD_NAMES.incomeToPrincipal);
+    const transfers_WODR = sumField(wodrData, FIELD_NAMES.transfersAll);
+    const endingMV_WODR = sumField(wodrData, FIELD_NAMES.endingMV);
+    
+    // Calculate WDR totals
+    const beginningMV_WDR = sumField(wdrData, FIELD_NAMES.beginningMV);
+    const realizedGains_WDR = sumField(wdrData, FIELD_NAMES.realizedGains);
+    const unrealizedGains_WDR = sumField(wdrData, FIELD_NAMES.unrealizedGains);
+    const investmentFees_WDR = sumField(wdrData, FIELD_NAMES.investmentFees);
+    const income_WDR = sumField(wdrData, FIELD_NAMES.income);
+    const gifts_WDR = sumField(wdrData, FIELD_NAMES.giftsAll);
+    const distributions_WDR = sumField(wdrData, FIELD_NAMES.distributionsAll);
+    const expenses_WDR = sumField(wdrData, FIELD_NAMES.expensesAll);
+    const incomeToPrincipal_WDR = sumField(wdrData, FIELD_NAMES.incomeToPrincipal);
+    const transfers_WDR = sumField(wdrData, FIELD_NAMES.transfersAll);
+    const endingMV_WDR = sumField(wdrData, FIELD_NAMES.endingMV);
+    
+    // Calculate Due To/From totals (added to WODR column)
+    const dueToFrom_beginningMV = sumField(dueToFromData, FIELD_NAMES.beginningMV);
+    const dueToFrom_endingMV = sumField(dueToFromData, FIELD_NAMES.endingMV);
+    // For the Due To/From line item, sum all activity fields
+    const dueToFrom_activity = sumField(dueToFromData, FIELD_NAMES.realizedGains) +
+        sumField(dueToFromData, FIELD_NAMES.unrealizedGains) +
+        sumField(dueToFromData, FIELD_NAMES.investmentFees) +
+        sumField(dueToFromData, FIELD_NAMES.income) +
+        sumField(dueToFromData, FIELD_NAMES.giftsAll) +
+        sumField(dueToFromData, FIELD_NAMES.distributionsAll) +
+        sumField(dueToFromData, FIELD_NAMES.expensesAll) +
+        sumField(dueToFromData, FIELD_NAMES.incomeToPrincipal) +
+        sumField(dueToFromData, FIELD_NAMES.transfersAll);
+    
+    // Calculate net activities by classification
+    const netInvestmentActivity_WODR = realizedGains_WODR + unrealizedGains_WODR + investmentFees_WODR + income_WODR;
+    const netInvestmentActivity_WDR = realizedGains_WDR + unrealizedGains_WDR + investmentFees_WDR + income_WDR;
+    
+    const netFundActivity_WODR = gifts_WODR + distributions_WODR + expenses_WODR + incomeToPrincipal_WODR + transfers_WODR;
+    const netFundActivity_WDR = gifts_WDR + distributions_WDR + expenses_WDR + incomeToPrincipal_WDR + transfers_WDR;
+    
+    // Totals (sum of all classifications)
+    const beginningMV = beginningMV_WODR + beginningMV_WDR + dueToFrom_beginningMV;
+    const realizedGains = realizedGains_WODR + realizedGains_WDR;
+    const unrealizedGains = unrealizedGains_WODR + unrealizedGains_WDR;
+    const investmentFees = investmentFees_WODR + investmentFees_WDR;
+    const income = income_WODR + income_WDR;
+    const netInvestmentActivity = netInvestmentActivity_WODR + netInvestmentActivity_WDR;
+    
+    const gifts = gifts_WODR + gifts_WDR;
+    const distributions = distributions_WODR + distributions_WDR;
+    const expenses = expenses_WODR + expenses_WDR;
+    const incomeToPrincipal = incomeToPrincipal_WODR + incomeToPrincipal_WDR;
+    const transfers = transfers_WODR + transfers_WDR;
+    const netFundActivity = netFundActivity_WODR + netFundActivity_WDR + dueToFrom_activity;
+    
+    const endingMV = endingMV_WODR + endingMV_WDR + dueToFrom_endingMV;
+    
+    // Helper function to format a value with proper color
+    function formatValue(value, isTotal = false, isSubtotal = false, isTotalColumn = false) {
+        // If NAC data not available and this is WODR/WDR column, show dash
+        if (!hasNACData && !isTotalColumn && value === 0) {
+            return `<span class="text-gray-400">—</span>`;
+        }
+        const valueColor = value >= 0 ? 'text-gray-900' : 'text-red-600';
+        const fontClass = isTotal ? 'font-bold' : (isSubtotal ? 'font-semibold' : '');
+        return `<span class="${fontClass} ${valueColor} tabular-nums text-right">${formatCurrency(value)}</span>`;
+    }
+    
+    // Helper function to format a three-column row
+    function formatRow(label, wodrValue, wdrValue, totalValue, isSubtotal = false, isTotal = false, showDueToFrom = false) {
+        const bgClass = isTotal ? 'bg-gray-100' : (isSubtotal ? 'bg-gray-50' : '');
+        const fontClass = isTotal ? 'font-bold' : (isSubtotal ? 'font-semibold' : '');
+        const borderClass = isTotal ? 'border-t-2 border-gray-300' : (isSubtotal ? 'border-t border-gray-200' : '');
+        const paddingLeft = (!isSubtotal && !isTotal) ? 'pl-3' : '';
+        
+        return `
+            <tr class="${bgClass} ${borderClass}">
+                <td class="py-1 px-2 ${fontClass} ${paddingLeft} text-gray-700 text-xs">${label}${showDueToFrom ? ' *' : ''}</td>
+                <td class="py-1 px-2 text-right text-xs">${formatValue(wodrValue, isTotal, isSubtotal, false)}</td>
+                <td class="py-1 px-2 text-right text-xs">${formatValue(wdrValue, isTotal, isSubtotal, false)}</td>
+                <td class="py-1 px-2 text-right text-xs">${formatValue(totalValue, isTotal, isSubtotal, true)}</td>
+            </tr>
+        `;
+    }
+    
+    // Helper function for section headers
+    function formatSectionHeader(label) {
+        return `
+            <tr class="bg-blue-50 border-t border-gray-200">
+                <td colspan="4" class="py-1 px-2 font-semibold text-gray-700 text-xs">${label}</td>
+            </tr>
+        `;
+    }
+    
+    // Build the rollforward summary HTML with three columns
+    container.innerHTML = `
+        <div class="border border-gray-200 rounded-lg overflow-hidden">
+            <table class="w-full text-xs">
+                <!-- Column Headers -->
+                <thead>
+                    <tr class="bg-gray-200 border-b border-gray-300">
+                        <th class="py-1.5 px-2 text-left font-semibold text-gray-700 text-xs"></th>
+                        <th class="py-1.5 px-2 text-right font-semibold text-gray-700 text-xs whitespace-nowrap">Without Donor<br>Restriction</th>
+                        <th class="py-1.5 px-2 text-right font-semibold text-gray-700 text-xs whitespace-nowrap">With Donor<br>Restriction</th>
+                        <th class="py-1.5 px-2 text-right font-semibold text-gray-700 text-xs">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Beginning Market Value -->
+                    ${formatRow('Beginning Market Value', beginningMV_WODR + dueToFrom_beginningMV, beginningMV_WDR, beginningMV, false, true)}
+                    
+                    <!-- Investment Activity Section -->
+                    ${formatSectionHeader('Investment Activity')}
+                    ${formatRow('Realized Gains', realizedGains_WODR, realizedGains_WDR, realizedGains)}
+                    ${formatRow('Unrealized Gains', unrealizedGains_WODR, unrealizedGains_WDR, unrealizedGains)}
+                    ${formatRow('Investment Fees', investmentFees_WODR, investmentFees_WDR, investmentFees)}
+                    ${formatRow('Income', income_WODR, income_WDR, income)}
+                    ${formatRow('Net Investment Activity', netInvestmentActivity_WODR, netInvestmentActivity_WDR, netInvestmentActivity, true)}
+                    
+                    <!-- Fund Activity Section -->
+                    ${formatSectionHeader('Fund Activity')}
+                    ${formatRow('Gifts', gifts_WODR, gifts_WDR, gifts)}
+                    ${formatRow('Distributions', distributions_WODR, distributions_WDR, distributions)}
+                    ${formatRow('Expenses', expenses_WODR, expenses_WDR, expenses)}
+                    ${formatRow('Income to Principal', incomeToPrincipal_WODR, incomeToPrincipal_WDR, incomeToPrincipal)}
+                    ${formatRow('Transfers', transfers_WODR, transfers_WDR, transfers)}
+                    ${formatRow('Due To/From', dueToFrom_activity, 0, dueToFrom_activity, false, false, true)}
+                    ${formatRow('Net Fund Activity', netFundActivity_WODR + dueToFrom_activity, netFundActivity_WDR, netFundActivity, true)}
+                    
+                    <!-- Ending Market Value -->
+                    ${formatRow('Ending Market Value', endingMV_WODR + dueToFrom_endingMV, endingMV_WDR, endingMV, false, true)}
+                </tbody>
+            </table>
+            
+            <!-- Footnote -->
+            <div class="px-2 py-1.5 bg-gray-50 border-t border-gray-200">
+                <p class="text-xs text-gray-500 italic">* Due To/From is included in the Without Donor Restriction column only.</p>
+                ${!hasNACData ? '<p class="text-xs text-gray-500 italic mt-1">Note: Net Asset Classification breakdown not available in data source.</p>' : ''}
+            </div>
+        </div>
+    `;
+}
+
+// ============================================================================
+// SECTION 9B: FILTERING, SEARCH, PAGINATION & EXPORT
+// ============================================================================
+
+/**
+ * Populates filter dropdowns with unique values from the data.
+ * Called during dashboard initialization.
+ * 
+ * @param {Array} data - Full dataset
+ */
+function populateFilterOptions(data) {
+    // Get unique fund names with IDs
+    const funds = [...new Set(data.map(d => {
+        const id = d[FIELD_NAMES.fundId] || '';
+        const name = d[FIELD_NAMES.fundName] || 'Unnamed';
+        return JSON.stringify({ id, name, display: `(${id}) ${name}` });
+    }))].map(s => JSON.parse(s)).sort((a, b) => a.name.localeCompare(b.name));
+    
+    // Get unique fund types
+    const fundTypes = [...new Set(data.map(d => d[FIELD_NAMES.fundType] || 'Other'))]
+        .filter(Boolean).sort();
+    
+    // Get unique colleges
+    const operatingUnits = [...new Set(data.map(d => d[FIELD_NAMES.operatingUnit] || ''))]
+        .filter(Boolean).sort();
+    
+    // Get unique schools
+    const reportingUnits = [...new Set(data.map(d => d[FIELD_NAMES.reportingUnit] || ''))]
+        .filter(Boolean).sort();
+    
+    // Get unique purposes
+    const purposes = [...new Set(data.map(d => d[FIELD_NAMES.purpose] || 'Other'))]
+        .filter(Boolean).sort();
+    
+    // Get unique Net Asset Classifications
+    const netAssetClassifications = [...new Set(data.map(d => d[FIELD_NAMES.netAssetClassification] || ''))]
+        .filter(Boolean).sort();
+    
+    // Store funds globally for search functionality
+    window.fundsList = funds;
+    
+    // Initialize fund dropdown (will be populated on search/focus)
+    updateFundDropdown('');
+    
+    // Populate College dropdown
+    const operatingUnitSelect = document.getElementById('filter-operating-unit');
+    operatingUnitSelect.innerHTML = '<option value="">All Colleges</option>' + 
+        operatingUnits.map(o => `<option value="${o}">${o}</option>`).join('');
+    
+    // Populate School dropdown
+    const reportingUnitSelect = document.getElementById('filter-reporting-unit');
+    reportingUnitSelect.innerHTML = '<option value="">All Schools</option>' + 
+        reportingUnits.map(r => `<option value="${r}">${r}</option>`).join('');
+    
+    // Populate Net Asset Classification dropdown
+    const nacSelect = document.getElementById('filter-nac');
+    nacSelect.innerHTML = '<option value="">All Classifications</option>' + 
+        netAssetClassifications.map(n => `<option value="${n}">${n}</option>`).join('');
+    
+    // Populate Fund Type dropdown
+    const typeSelect = document.getElementById('filter-fund-type');
+    typeSelect.innerHTML = '<option value="">All Types</option>' + 
+        fundTypes.map(t => `<option value="${t}">${t}</option>`).join('');
+    
+    // Populate Purpose dropdown
+    const purposeSelect = document.getElementById('filter-purpose');
+    purposeSelect.innerHTML = '<option value="">All Purposes</option>' + 
+        purposes.map(p => `<option value="${p}">${p}</option>`).join('');
+    
+    // Update total count
+    document.getElementById('total-count').textContent = data.length;
+}
+
+/**
+ * Applies all active filters to the data and updates the dashboard.
+ * Triggered when any filter value changes.
+ */
+function applyFilters() {
+    const selectedDate = document.getElementById('date-filter').value;
+    
+    // Get filter values
+    const fundFilter = document.getElementById('filter-fund').value;
+    const operatingUnitFilter = document.getElementById('filter-operating-unit').value;
+    const reportingUnitFilter = document.getElementById('filter-reporting-unit').value;
+    const nacFilter = document.getElementById('filter-nac').value;
+    const fundTypeFilter = document.getElementById('filter-fund-type').value;
+    const purposeFilter = document.getElementById('filter-purpose').value;
+    const mvMin = parseFloat(document.getElementById('filter-mv-min').value) || null;
+    const mvMax = parseFloat(document.getElementById('filter-mv-max').value) || null;
+    const underwaterOnly = document.getElementById('filter-underwater').checked;
+    
+    // Helper function to apply non-date filters
+    function applyNonDateFilters(data) {
+        let result = [...data];
+        
+        // Apply Fund ID filter
+        if (fundFilter) {
+            result = result.filter(d => String(d[FIELD_NAMES.fundId]) === fundFilter);
+        }
+        
+        // Apply College filter
+        if (operatingUnitFilter) {
+            result = result.filter(d => d[FIELD_NAMES.operatingUnit] === operatingUnitFilter);
+        }
+        
+        // Apply School filter
+        if (reportingUnitFilter) {
+            result = result.filter(d => d[FIELD_NAMES.reportingUnit] === reportingUnitFilter);
+        }
+        
+        // Apply Net Asset Classification filter
+        if (nacFilter) {
+            result = result.filter(d => d[FIELD_NAMES.netAssetClassification] === nacFilter);
+        }
+        
+        // Apply Fund Type filter
+        if (fundTypeFilter) {
+            result = result.filter(d => d[FIELD_NAMES.fundType] === fundTypeFilter);
+        }
+        
+        // Apply Purpose filter
+        if (purposeFilter) {
+            result = result.filter(d => d[FIELD_NAMES.purpose] === purposeFilter);
+        }
+        
+        // Apply Ending MV range filter
+        if (mvMin !== null) {
+            result = result.filter(d => parseCurrency(d[FIELD_NAMES.endingMV]) >= mvMin);
+        }
+        if (mvMax !== null) {
+            result = result.filter(d => parseCurrency(d[FIELD_NAMES.endingMV]) <= mvMax);
+        }
+        
+        // Apply Underwater filter (MV < Historical Gift)
+        if (underwaterOnly) {
+            result = result.filter(d => 
+                parseCurrency(d[FIELD_NAMES.endingMV]) < parseCurrency(d[FIELD_NAMES.endingHistoricalGift])
+            );
+        }
+        
+        return result;
+    }
+    
+    // Filter data for selected date period
+    const periodData = globalData.filter(d => d[FIELD_NAMES.date] === selectedDate);
+    const filtered = applyNonDateFilters(periodData);
+    
+    // Filter ALL historical data for trend chart (same filters, all dates)
+    const filteredAllDates = applyNonDateFilters(globalData);
+    
+    // Update trend chart with filtered historical data
+    renderTrendChart(filteredAllDates);
+    
+    // Update other charts with filtered data for selected period
+    renderMetrics(filtered);
+    renderClassificationChart(filtered);
+    renderPurposeChart(filtered);
+    renderRollforwardSummary(filtered);
+    
+    // Store filtered data for table (before search)
+    filteredTableData = filtered;
+    
+    // Reset to page 1 when filters change
+    currentPage = 1;
+    
+    // Apply table search and render
+    applyTableSearch();
+    
+    // Update filter count display
+    document.getElementById('filtered-count').textContent = filtered.length;
+    
+    // Update active filters display
+    updateActiveFiltersDisplay();
+}
+
+/**
+ * Handles fund search input - matches user input to fund list and applies filter.
+ * 
+ * @param {string} value - The search input value
+ */
+function handleFundSearchInput(value) {
+    const clearBtn = document.getElementById('clear-fund-search');
+    
+    // Show/hide clear button
+    if (value) {
+        clearBtn.classList.remove('hidden');
+    } else {
+        clearBtn.classList.add('hidden');
+    }
+    
+    // Update dropdown with filtered results
+    updateFundDropdown(value);
+    showFundDropdown();
+}
+
+/**
+ * Updates the fund dropdown with filtered options.
+ * Shows max 10 items with scrolling.
+ * 
+ * @param {string} searchTerm - The search term to filter by
+ */
+function updateFundDropdown(searchTerm) {
+    const dropdown = document.getElementById('fund-dropdown');
+    
+    if (!window.fundsList) {
+        dropdown.innerHTML = '<div class="px-3 py-2 text-sm text-gray-500">Loading funds...</div>';
+        return;
+    }
+    
+    const term = searchTerm.toLowerCase().trim();
+    
+    // Filter funds based on search term
+    let filteredFunds = window.fundsList;
+    if (term) {
+        filteredFunds = window.fundsList.filter(f => 
+            f.display.toLowerCase().includes(term) ||
+            f.id.toLowerCase().includes(term) ||
+            f.name.toLowerCase().includes(term)
+        );
+    }
+    
+    // Build dropdown HTML
+    if (filteredFunds.length === 0) {
+        dropdown.innerHTML = '<div class="px-3 py-2 text-sm text-gray-500">No funds found</div>';
+    } else {
+        // Show "All Funds" option first if no search term
+        let html = '';
+        if (!term) {
+            html = `<div class="fund-option px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 border-b border-gray-100" 
+                         data-id="" 
+                         data-display=""
+                         onmousedown="selectFund('', '')">
+                        <span class="text-gray-600">All Funds</span>
+                    </div>`;
+        }
+        
+        html += filteredFunds.map(f => `
+            <div class="fund-option px-3 py-2 text-sm cursor-pointer hover:bg-blue-50" 
+                 data-id="${f.id}" 
+                 data-display="${f.display}"
+                 onmousedown="selectFund('${f.id}', '${f.display.replace(/'/g, "\\'")}')">
+                <span class="font-medium text-gray-800">${f.id}</span>
+                <span class="text-gray-600 ml-1">${f.name}</span>
+            </div>
+        `).join('');
+        
+        dropdown.innerHTML = html;
+    }
+}
+
+/**
+ * Shows the fund dropdown.
+ */
+function showFundDropdown() {
+    const dropdown = document.getElementById('fund-dropdown');
+    dropdown.classList.remove('hidden');
+}
+
+/**
+ * Hides the fund dropdown after a short delay (allows click events to fire).
+ */
+function hideFundDropdownDelayed() {
+    setTimeout(() => {
+        const dropdown = document.getElementById('fund-dropdown');
+        dropdown.classList.add('hidden');
+    }, 200);
+}
+
+/**
+ * Selects a fund from the dropdown.
+ * 
+ * @param {string} id - The fund ID
+ * @param {string} display - The display text for the fund
+ */
+function selectFund(id, display) {
+    const searchInput = document.getElementById('filter-fund-search');
+    const hiddenInput = document.getElementById('filter-fund');
+    const clearBtn = document.getElementById('clear-fund-search');
+    const dropdown = document.getElementById('fund-dropdown');
+    
+    searchInput.value = display;
+    hiddenInput.value = id;
+    
+    if (display) {
+        clearBtn.classList.remove('hidden');
+    } else {
+        clearBtn.classList.add('hidden');
+    }
+    
+    dropdown.classList.add('hidden');
+    applyFilters();
+}
+
+/**
+ * Clears the fund search input and resets the filter.
+ */
+function clearFundSearch() {
+    const searchInput = document.getElementById('filter-fund-search');
+    const hiddenInput = document.getElementById('filter-fund');
+    const clearBtn = document.getElementById('clear-fund-search');
+    const dropdown = document.getElementById('fund-dropdown');
+    
+    searchInput.value = '';
+    hiddenInput.value = '';
+    clearBtn.classList.add('hidden');
+    dropdown.classList.add('hidden');
+    applyFilters();
+}
+
+/**
+ * Applies the search query to the table data.
+ */
+function applyTableSearch() {
+    const query = tableSearchQuery.toLowerCase().trim();
+    
+    let searchedData = filteredTableData;
+    
+    if (query) {
+        searchedData = filteredTableData.filter(fund => {
+            const fundId = String(fund[FIELD_NAMES.fundId] || '').toLowerCase();
+            const fundName = String(fund[FIELD_NAMES.fundName] || '').toLowerCase();
+            const purpose = String(fund[FIELD_NAMES.purpose] || '').toLowerCase();
+            const fundType = String(fund[FIELD_NAMES.fundType] || '').toLowerCase();
+            const operatingUnit = String(fund[FIELD_NAMES.operatingUnit] || '').toLowerCase();
+            const reportingUnit = String(fund[FIELD_NAMES.reportingUnit] || '').toLowerCase();
+            
+            return fundId.includes(query) || 
+                   fundName.includes(query) || 
+                   purpose.includes(query) ||
+                   fundType.includes(query) ||
+                   operatingUnit.includes(query) ||
+                   reportingUnit.includes(query);
         });
     }
+    
+    // Render table with pagination
+    renderTopFundsTable(searchedData);
+}
 
-    function renderTopFundsTable(data) {
-        const topFunds = [...data]
-            .filter(fund => fund["Fund ID"] !== '400000')
-            .sort((a, b) => parseCurrency(b["Ending MV"]) - parseCurrency(a["Ending MV"]))
-           // .slice(0, 10);
+/**
+ * Handles table search input.
+ */
+function handleTableSearch(event) {
+    tableSearchQuery = event.target.value;
+    currentPage = 1; // Reset to first page
+    applyTableSearch();
+}
 
-        // Columns to sum for Net Investment Activity per fund.
-        const netinvestmentActivityCols = [
-            "Realized Gains",
-            "Unrealized Gains",
-            "Investment Fees",
-            "Income"
-        ];
+/**
+ * Updates the display showing which filters are currently active.
+ */
+function updateActiveFiltersDisplay() {
+    const activeFilters = [];
+    
+    const fundFilter = document.getElementById('filter-fund');
+    const operatingUnitFilter = document.getElementById('filter-operating-unit');
+    const reportingUnitFilter = document.getElementById('filter-reporting-unit');
+    const nacFilter = document.getElementById('filter-nac');
+    const fundTypeFilter = document.getElementById('filter-fund-type');
+    const purposeFilter = document.getElementById('filter-purpose');
+    const mvMin = document.getElementById('filter-mv-min').value;
+    const mvMax = document.getElementById('filter-mv-max').value;
+    const underwaterOnly = document.getElementById('filter-underwater').checked;
+    const fundSearchValue = document.getElementById('filter-fund-search').value;
+    
+    if (fundFilter.value && fundSearchValue) {
+        activeFilters.push({ label: 'Fund', value: fundSearchValue });
+    }
+    if (operatingUnitFilter.value) {
+        activeFilters.push({ label: 'College', value: operatingUnitFilter.value });
+    }
+    if (reportingUnitFilter.value) {
+        activeFilters.push({ label: 'School', value: reportingUnitFilter.value });
+    }
+    if (nacFilter.value) {
+        activeFilters.push({ label: 'NAC', value: nacFilter.value });
+    }
+    if (fundTypeFilter.value) {
+        activeFilters.push({ label: 'Type', value: fundTypeFilter.value });
+    }
+    if (purposeFilter.value) {
+        activeFilters.push({ label: 'Purpose', value: purposeFilter.value });
+    }
+    if (mvMin) {
+        activeFilters.push({ label: 'Min MV', value: formatCurrency(parseFloat(mvMin)) });
+    }
+    if (mvMax) {
+        activeFilters.push({ label: 'Max MV', value: formatCurrency(parseFloat(mvMax)) });
+    }
+    if (underwaterOnly) {
+        activeFilters.push({ label: 'Status', value: 'Underwater Only' });
+    }
+    
+    const container = document.getElementById('active-filters');
+    const list = document.getElementById('active-filters-list');
+    
+    if (activeFilters.length > 0) {
+        container.classList.remove('hidden');
+        list.innerHTML = activeFilters.map(f => 
+            `<span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                ${f.label}: ${f.value}
+            </span>`
+        ).join('');
+    } else {
+        container.classList.add('hidden');
+    }
+    
+    // Update print-friendly filter display
+    const printFiltersContainer = document.getElementById('print-filters');
+    const printFiltersList = document.getElementById('print-filters-list');
+    
+    if (activeFilters.length > 0) {
+        printFiltersContainer.classList.remove('hidden');
+        printFiltersContainer.classList.add('print:block');
+        printFiltersList.textContent = activeFilters.map(f => `${f.label}: ${f.value}`).join(' | ');
+    } else {
+        printFiltersList.textContent = 'None';
+    }
+}
 
-        const netfundActivityCols = [
-            "Gifts All",
-            "Distributions All",
-            "Expenses All",
-            "Income to Principal",
-            "Transfers All"
+/**
+ * Toggles the filter panel open/closed (slides to right edge).
+ */
+function toggleFilterPanel() {
+    const aside = document.getElementById('filter-aside');
+    const icon = document.getElementById('filter-toggle-icon');
+    
+    aside.classList.toggle('collapsed');
+    icon.classList.toggle('collapsed');
+    
+    // Save state to localStorage
+    const isCollapsed = aside.classList.contains('collapsed');
+    localStorage.setItem('filterPanelCollapsed', isCollapsed ? 'true' : 'false');
+}
 
-        ];
+/**
+ * Initializes the filter panel state from localStorage.
+ */
+function initFilterPanelState() {
+    const isCollapsed = localStorage.getItem('filterPanelCollapsed') === 'true';
+    
+    if (isCollapsed) {
+        const aside = document.getElementById('filter-aside');
+        const icon = document.getElementById('filter-toggle-icon');
+        
+        aside.classList.add('collapsed');
+        icon.classList.add('collapsed');
+    }
+}
 
-        const tableHtml = topFunds.map(fund => {
-            const mv = parseCurrency(fund["Ending MV"]);
-            const start = parseCurrency(fund["Beginning MV"]);
-            const change = start === 0 ? 0 : ((mv - start) / start) * 100;
-            const changeColor = change >= 0 ? 'text-green-600' : 'text-red-600';
-            const fundIdDisplay = fund["Fund ID"] !== undefined ? String(fund["Fund ID"]) : '';
+/**
+ * Resets all filters to their default (All) state.
+ */
+function resetFilters() {
+    document.getElementById('filter-fund').value = '';
+    document.getElementById('filter-fund-search').value = '';
+    document.getElementById('clear-fund-search').classList.add('hidden');
+    document.getElementById('filter-operating-unit').value = '';
+    document.getElementById('filter-reporting-unit').value = '';
+    document.getElementById('filter-nac').value = '';
+    document.getElementById('filter-fund-type').value = '';
+    document.getElementById('filter-purpose').value = '';
+    document.getElementById('filter-mv-min').value = '';
+    document.getElementById('filter-mv-max').value = '';
+    document.getElementById('filter-underwater').checked = false;
+    document.getElementById('table-search').value = '';
+    tableSearchQuery = '';
+    currentPage = 1;
+    
+    applyFilters();
+}
 
-            // Sum the configured columns for this fund to get Net Investment Activity
-            const netinvestmentActivity = netinvestmentActivityCols.reduce((s, col) => s + parseCurrency(fund[col]), 0);
-            const netinvestColor = netinvestmentActivity >= 0 ? 'text-green-600' : 'text-red-600';
-            const netfundActivity = netfundActivityCols.reduce((s, col) => s + parseCurrency(fund[col]), 0);
-            const netfundColor = netfundActivity >= 0 ? 'text-green-600' : 'text-red-600';
+/**
+ * Changes the current page by the given delta.
+ * 
+ * @param {number} delta - Number of pages to move (positive or negative)
+ */
+function changePage(delta) {
+    const totalPages = getTotalPages();
+    const newPage = currentPage + delta;
+    
+    if (newPage >= 1 && newPage <= totalPages) {
+        currentPage = newPage;
+        applyTableSearch();
+    }
+}
 
+/**
+ * Goes to a specific page.
+ * 
+ * @param {number} page - Page number to go to
+ */
+function goToPage(page) {
+    currentPage = page;
+    applyTableSearch();
+}
 
-            return `
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 overflow-hidden text-ellipsis">${fundIdDisplay ? `(${fundIdDisplay}) ` : ''}${fund["Fund Name"]}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${fund["Purpose"]}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 font-mono">${formatCurrency(start)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 font-mono ${netinvestColor}">${formatCurrency(netinvestmentActivity)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 font-mono ${netfundColor}">${formatCurrency(netfundActivity)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 font-mono">${formatCurrency(mv)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium ${changeColor}">
-                        ${change.toFixed(2)}%
-                    </td>
-                </tr>
-            `;
-        }).join('');
+/**
+ * Handles rows per page selection change.
+ */
+function changeRowsPerPage() {
+    const select = document.getElementById('rows-per-page');
+    rowsPerPage = select.value === 'all' ? Infinity : parseInt(select.value);
+    currentPage = 1;
+    applyTableSearch();
+}
+
+/**
+ * Calculates total number of pages based on current data and rows per page.
+ * 
+ * @returns {number} Total number of pages
+ */
+function getTotalPages() {
+    if (rowsPerPage === Infinity) return 1;
+    const query = tableSearchQuery.toLowerCase().trim();
+    let dataCount = filteredTableData.length;
+    
+    if (query) {
+        dataCount = filteredTableData.filter(fund => {
+            const fundId = String(fund[FIELD_NAMES.fundId] || '').toLowerCase();
+            const fundName = String(fund[FIELD_NAMES.fundName] || '').toLowerCase();
+            const purpose = String(fund[FIELD_NAMES.purpose] || '').toLowerCase();
+            return fundId.includes(query) || fundName.includes(query) || purpose.includes(query);
+        }).length;
+    }
+    
+    return Math.ceil(dataCount / rowsPerPage);
+}
+
+/**
+ * Renders pagination controls.
+ * 
+ * @param {number} totalItems - Total number of items after filtering/search
+ */
+function renderPaginationControls(totalItems) {
+    const totalPages = rowsPerPage === Infinity ? 1 : Math.ceil(totalItems / rowsPerPage);
+    const startItem = totalItems === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1;
+    const endItem = Math.min(currentPage * rowsPerPage, totalItems);
+    
+    // Update info text
+    document.getElementById('pagination-info').textContent = 
+        totalItems === 0 ? 'No results' : `${startItem}-${endItem} of ${totalItems}`;
+    
+    // Update prev/next buttons
+    document.getElementById('prev-page').disabled = currentPage <= 1;
+    document.getElementById('next-page').disabled = currentPage >= totalPages;
+    
+    // Render page numbers (show max 5 pages)
+    const pageNumbers = document.getElementById('page-numbers');
+    let pages = [];
+    
+    if (totalPages <= 5) {
+        pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+    } else {
+        if (currentPage <= 3) {
+            pages = [1, 2, 3, 4, 5];
+        } else if (currentPage >= totalPages - 2) {
+            pages = [totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+        } else {
+            pages = [currentPage - 2, currentPage - 1, currentPage, currentPage + 1, currentPage + 2];
+        }
+    }
+    
+    pageNumbers.innerHTML = pages.map(p => 
+        `<button onclick="goToPage(${p})" 
+                 class="pagination-btn ${p === currentPage ? 'active' : ''}">${p}</button>`
+    ).join('');
+}
+
+/**
+ * Exports the current filtered table data to an Excel file.
+ */
+function exportToExcel() {
+    // Get brand colors for reference
+    const brandColors = getBrandColors();
+    
+    // Columns for Net Investment Activity
+    const netInvestmentCols = [
+        FIELD_NAMES.realizedGains,
+        FIELD_NAMES.unrealizedGains,
+        FIELD_NAMES.investmentFees,
+        FIELD_NAMES.income
+    ];
+    
+    // Columns for Net Fund Activity
+    const netFundCols = [
+        FIELD_NAMES.giftsAll,
+        FIELD_NAMES.distributionsAll,
+        FIELD_NAMES.expensesAll,
+        FIELD_NAMES.incomeToPrincipal,
+        FIELD_NAMES.transfersAll
+    ];
+    
+    // Prepare data for export
+    const exportData = filteredTableData
+        .filter(fund => fund[FIELD_NAMES.fundId] !== '400000')
+        .map(fund => {
+            const fundId = fund[FIELD_NAMES.fundId] !== undefined 
+                ? String(fund[FIELD_NAMES.fundId]) : '';
+            const fundName = fund[FIELD_NAMES.fundName] || 'Unnamed Fund';
+            const purpose = fund[FIELD_NAMES.purpose] || '-';
+            const fundType = fund[FIELD_NAMES.fundType] || '-';
+            
+            const beginningMV = parseCurrency(fund[FIELD_NAMES.beginningMV]);
+            const endingMV = parseCurrency(fund[FIELD_NAMES.endingMV]);
+            const beginningHistGift = parseCurrency(fund[FIELD_NAMES.beginningHistoricalGift]);
+            const endingHistGift = parseCurrency(fund[FIELD_NAMES.endingHistoricalGift]);
+            
+            const netInvestment = netInvestmentCols.reduce(
+                (sum, col) => sum + parseCurrency(fund[col]), 0
+            );
+            
+            const netFund = netFundCols.reduce(
+                (sum, col) => sum + parseCurrency(fund[col]), 0
+            );
+            
+            const changePercent = beginningMV === 0 ? 0 : 
+                ((endingMV - beginningMV) / beginningMV) * 100;
+            
+            return {
+                'Fund ID': fundId,
+                'Fund Name': fundName,
+                'Fund Type': fundType,
+                'Purpose': purpose,
+                'Beginning Hist. Gift': beginningHistGift,
+                'Beginning MV': beginningMV,
+                'Net Investment Activity': netInvestment,
+                'Net Fund Activity': netFund,
+                'Ending MV': endingMV,
+                'Ending Hist. Gift': endingHistGift,
+                'Change (%)': changePercent.toFixed(2) + '%'
+            };
+        });
+    
+    // Create workbook and worksheet
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Endowment Rollforward');
+    
+    // Set column widths
+    ws['!cols'] = [
+        { wch: 12 },  // Fund ID
+        { wch: 35 },  // Fund Name
+        { wch: 15 },  // Fund Type
+        { wch: 20 },  // Purpose
+        { wch: 18 },  // Beginning Hist. Gift
+        { wch: 15 },  // Beginning MV
+        { wch: 22 },  // Net Investment Activity
+        { wch: 18 },  // Net Fund Activity
+        { wch: 15 },  // Ending MV
+        { wch: 18 },  // Ending Hist. Gift
+        { wch: 12 }   // Change
+    ];
+    
+    // Generate filename with date
+    const selectedDate = document.getElementById('date-filter').value || 'export';
+    const filename = `Endowment_Rollforward_${selectedDate.replace(/\//g, '-')}.xlsx`;
+    
+    // Download the file
+    XLSX.writeFile(wb, filename);
+    
+    // Show success toast
+    showToast(`Exported ${exportData.length} funds to Excel`);
+}
+
+// ============================================================================
+// SECTION 10: COMPONENT RENDERERS - DATA TABLE
+// ============================================================================
+
+/**
+ * Renders the fund transaction rollforward table with pagination.
+ * Uses dynamic brand colors for positive/negative value styling.
+ * 
+ * @param {Array} data - Filtered and searched data
+ */
+function renderTopFundsTable(data) {
+    // Get current brand colors for dynamic theming
+    const brandColors = getBrandColors();
+    
+    // Columns that comprise Net Investment Activity
+    const netInvestmentCols = [
+        FIELD_NAMES.realizedGains,
+        FIELD_NAMES.unrealizedGains,
+        FIELD_NAMES.investmentFees,
+        FIELD_NAMES.income
+    ];
+
+    // Columns that comprise Net Fund Activity
+    const netFundCols = [
+        FIELD_NAMES.giftsAll,
+        FIELD_NAMES.distributionsAll,
+        FIELD_NAMES.expensesAll,
+        FIELD_NAMES.incomeToPrincipal,
+        FIELD_NAMES.transfersAll
+    ];
+
+    // Sort funds by ending market value (exclude aggregate row if Fund ID = 400000)
+    const sortedFunds = [...data]
+        .filter(fund => fund[FIELD_NAMES.fundId] !== '400000')
+        .sort((a, b) => 
+            parseCurrency(b[FIELD_NAMES.endingMV]) - 
+            parseCurrency(a[FIELD_NAMES.endingMV])
+        );
+
+    // Apply pagination
+    const totalItems = sortedFunds.length;
+    const startIndex = rowsPerPage === Infinity ? 0 : (currentPage - 1) * rowsPerPage;
+    const endIndex = rowsPerPage === Infinity ? totalItems : Math.min(startIndex + rowsPerPage, totalItems);
+    const paginatedFunds = sortedFunds.slice(startIndex, endIndex);
+
+    // Generate table rows for current page
+    const tableHtml = paginatedFunds.map(fund => {
+        const fundId = fund[FIELD_NAMES.fundId] !== undefined 
+            ? String(fund[FIELD_NAMES.fundId]) : '';
+        const fundName = fund[FIELD_NAMES.fundName] || 'Unnamed Fund';
+        const purpose = fund[FIELD_NAMES.purpose] || '-';
+        
+        const beginningMV = parseCurrency(fund[FIELD_NAMES.beginningMV]);
+        const endingMV = parseCurrency(fund[FIELD_NAMES.endingMV]);
+        const beginningHistGift = parseCurrency(fund[FIELD_NAMES.beginningHistoricalGift]);
+        const endingHistGift = parseCurrency(fund[FIELD_NAMES.endingHistoricalGift]);
+        
+        // Calculate net investment activity
+        const netInvestment = netInvestmentCols.reduce(
+            (sum, col) => sum + parseCurrency(fund[col]), 0
+        );
+        
+        // Calculate net fund activity
+        const netFund = netFundCols.reduce(
+            (sum, col) => sum + parseCurrency(fund[col]), 0
+        );
+        
+        // Calculate period change percentage
+        const changePercent = beginningMV === 0 ? 0 : 
+            ((endingMV - beginningMV) / beginningMV) * 100;
+        
+        // Determine colors for values using brand colors
+        const changeStyle = `color: ${changePercent >= 0 ? brandColors.positive : brandColors.negative}`;
+        const netInvestStyle = `color: ${netInvestment >= 0 ? brandColors.positive : brandColors.negative}`;
+        const netFundStyle = `color: ${netFund >= 0 ? brandColors.positive : brandColors.negative}`;
+
+        return `
+            <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-2 py-2 text-xs font-medium text-gray-900">
+                    ${fundId ? `(${fundId}) ` : ''}${fundName}
+                </td>
+                <td class="px-2 py-2 whitespace-nowrap text-xs text-gray-500">${purpose}</td>
+                <td class="px-2 py-2 whitespace-nowrap text-xs text-right text-gray-500 tabular-nums">
+                    ${formatCurrency(beginningHistGift)}
+                </td>
+                <td class="px-2 py-2 whitespace-nowrap text-xs text-right text-gray-900 tabular-nums">
+                    ${formatCurrency(beginningMV)}
+                </td>
+                <td class="px-2 py-2 whitespace-nowrap text-xs text-right tabular-nums" style="${netInvestStyle}">
+                    ${formatCurrency(netInvestment)}
+                </td>
+                <td class="px-2 py-2 whitespace-nowrap text-xs text-right tabular-nums" style="${netFundStyle}">
+                    ${formatCurrency(netFund)}
+                </td>
+                <td class="px-2 py-2 whitespace-nowrap text-xs text-right text-gray-900 tabular-nums">
+                    ${formatCurrency(endingMV)}
+                </td>
+                <td class="px-2 py-2 whitespace-nowrap text-xs text-right text-gray-500 tabular-nums">
+                    ${formatCurrency(endingHistGift)}
+                </td>
+                <td class="px-2 py-2 whitespace-nowrap text-xs text-right font-medium tabular-nums" style="${changeStyle}">
+                    ${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    // Handle empty state
+    if (paginatedFunds.length === 0) {
+        document.getElementById('top-funds-body').innerHTML = `
+            <tr>
+                <td colspan="9" class="px-6 py-8 text-center text-gray-500">
+                    No funds match your current filters or search.
+                </td>
+            </tr>
+        `;
+    } else {
         document.getElementById('top-funds-body').innerHTML = tableHtml;
     }
+    
+    // Update pagination controls
+    renderPaginationControls(totalItems);
+}
 
-    // --- Bootstrapper ---
-    document.addEventListener('DOMContentLoaded', () => {
-        fetchAirtableData().then(result => {
-            setSourceStatus(result.isLive, result.error);
+// ============================================================================
+// SECTION 11: APPLICATION BOOTSTRAP
+// ============================================================================
+
+/**
+ * Main entry point - runs when DOM is fully loaded.
+ * Fetches data and initializes the dashboard.
+ */
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        // Load saved dashboard title
+        loadDashboardTitle();
+        
+        // Initialize filter panel state (open by default, remembers user preference)
+        initFilterPanelState();
+        
+        // Initialize Calendly popup (shows after 30 seconds, once per session)
+        initCalendlyPopup();
+        
+        // Fetch data from Airtable
+        const result = await fetchAirtableData();
+        
+        // Update connection status badge
+        setSourceStatus(result.isLive, result.error);
+        
+        // Initialize dashboard if data is available
+        if (result.data.length > 0) {
             initDashboard(result.data);
-        });
-    });
+        } else {
+            // Show configuration prompt if no data
+            hideLoading();
+            document.getElementById('warning-message').classList.remove('hidden');
+            
+            // Auto-open config modal if credentials not set
+            const hasCredentials = getStoredValue(STORAGE_KEYS.API_KEY);
+            if (!hasCredentials) {
+                setTimeout(openConfigModal, 1000);
+            }
+        }
+    } catch (error) {
+        console.error('Dashboard initialization failed:', error);
+        setSourceStatus(false, 'An unexpected error occurred. Please try again.');
+        hideLoading();
+    }
+});
 
-
+// ============================================================================
+// END OF APPLICATION
+// ============================================================================
 </script>
 
 </body>
