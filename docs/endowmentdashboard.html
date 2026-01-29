@@ -2900,7 +2900,7 @@ function updateDateSpecificViews(selectedDate) {
  * 
  * @param {Array} data - Filtered data for the selected period
  */
-function renderMetrics(data) {
+function renderMetrics(data, priorData = []) {
     // Get current brand colors (only 4 colors)
     const brandColors = getBrandColors();
     
@@ -2911,18 +2911,29 @@ function renderMetrics(data) {
         sum + parseCurrency(item[FIELD_NAMES.endingHistoricalGift]), 0);
     const totalFunds = data.length;
     
-    // Calculate beginning period values for comparison
+    // Calculate beginning period values for comparison (from current period's beginning values)
     const beginningMV = data.reduce((sum, item) => 
         sum + parseCurrency(item[FIELD_NAMES.beginningMV]), 0);
     const beginningHistoricalGift = data.reduce((sum, item) => 
         sum + parseCurrency(item[FIELD_NAMES.beginningHistoricalGift]), 0);
     
-    // Calculate period-over-period changes
-    const mvChange = totalMV - beginningMV;
-    const mvChangePercent = beginningMV === 0 ? 0 : (mvChange / beginningMV) * 100;
+    // Calculate prior period totals (for filtered comparison)
+    const priorMV = priorData.length > 0 
+        ? priorData.reduce((sum, item) => sum + parseCurrency(item[FIELD_NAMES.endingMV]), 0)
+        : beginningMV;
+    const priorHistoricalGift = priorData.length > 0
+        ? priorData.reduce((sum, item) => sum + parseCurrency(item[FIELD_NAMES.endingHistoricalGift]), 0)
+        : beginningHistoricalGift;
+    const priorFundCount = priorData.length > 0 ? priorData.length : totalFunds;
     
-    const hgChange = totalHistoricalGift - beginningHistoricalGift;
-    const hgChangePercent = beginningHistoricalGift === 0 ? 0 : (hgChange / beginningHistoricalGift) * 100;
+    // Calculate period-over-period changes using filtered prior period data
+    const mvChange = totalMV - priorMV;
+    const mvChangePercent = priorMV === 0 ? 0 : (mvChange / priorMV) * 100;
+    
+    const hgChange = totalHistoricalGift - priorHistoricalGift;
+    const hgChangePercent = priorHistoricalGift === 0 ? 0 : (hgChange / priorHistoricalGift) * 100;
+    
+    const fundCountChange = totalFunds - priorFundCount;
     
     // Count underwater funds (MV < Historical Gift)
     const underwaterFunds = data.filter(item => 
@@ -2938,18 +2949,6 @@ function renderMetrics(data) {
         parseCurrency(item[FIELD_NAMES.income]) + 
         parseCurrency(item[FIELD_NAMES.investmentFees]), 0);
     const returnPercent = beginningMV === 0 ? 0 : (netInvestmentReturn / beginningMV) * 100;
-    
-    // Calculate prior period fund count for comparison
-    const selectedDate = document.getElementById('date-filter')?.value;
-    const allDates = [...new Set(globalData.map(d => d[FIELD_NAMES.date]))]
-        .filter(Boolean)
-        .sort((a, b) => new Date(b) - new Date(a)); // Most recent first
-    const currentDateIndex = allDates.indexOf(selectedDate);
-    const priorDate = currentDateIndex < allDates.length - 1 ? allDates[currentDateIndex + 1] : null;
-    const priorPeriodFunds = priorDate 
-        ? globalData.filter(d => d[FIELD_NAMES.date] === priorDate).length 
-        : totalFunds;
-    const fundCountChange = totalFunds - priorPeriodFunds;
 
     // Helper function to format change indicator
     function formatChange(value, isPercent = true) {
@@ -3825,11 +3824,23 @@ function applyFilters() {
     // Filter ALL historical data for trend chart (same filters, all dates)
     const filteredAllDates = applyNonDateFilters(globalData);
     
+    // Calculate prior period filtered data for KPI comparisons
+    const allDates = [...new Set(globalData.map(d => d[FIELD_NAMES.date]))]
+        .filter(Boolean)
+        .sort((a, b) => new Date(b) - new Date(a)); // Most recent first
+    const currentDateIndex = allDates.indexOf(selectedDate);
+    const priorDate = currentDateIndex < allDates.length - 1 ? allDates[currentDateIndex + 1] : null;
+    let priorPeriodFiltered = [];
+    if (priorDate) {
+        const priorPeriodData = globalData.filter(d => d[FIELD_NAMES.date] === priorDate);
+        priorPeriodFiltered = applyNonDateFilters(priorPeriodData);
+    }
+    
     // Update trend chart with filtered historical data, ending at selected date
     renderTrendChart(filteredAllDates, selectedDate);
     
     // Update other charts with filtered data for selected period
-    renderMetrics(filtered);
+    renderMetrics(filtered, priorPeriodFiltered);
     renderClassificationChart(filtered);
     renderPurposeChart(filtered);
     renderCollegeChart(filtered);
