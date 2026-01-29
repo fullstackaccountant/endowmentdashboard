@@ -169,9 +169,42 @@ SECURITY NOTE:
         /* Print Styles */
         @media print {
             .no-print { display: none !important; }
-            body { background: white; }
+            body { 
+                background: white;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
             .card { box-shadow: none; border: 1px solid #e5e7eb; }
             #print-filters { display: block !important; }
+            
+            /* Always hide filter panel when printing */
+            .filter-aside,
+            #filter-aside { 
+                display: none !important; 
+                width: 0 !important;
+                min-width: 0 !important;
+            }
+            
+            /* Make main content full width */
+            .flex-1.min-w-0 {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            
+            /* Ensure charts render properly */
+            canvas {
+                max-width: 100% !important;
+                height: auto !important;
+            }
+            
+            /* Hide warning messages */
+            #warning-message { display: none !important; }
+            
+            /* Page settings */
+            @page {
+                size: landscape;
+                margin: 0.5in;
+            }
         }
         
         /* Filter Panel Styles - Enhanced */
@@ -214,9 +247,140 @@ SECURITY NOTE:
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
         
-        /* Fund Search Dropdown Styles */
+        /* Multi-Select Dropdown Styles */
+        .multi-select-dropdown {
+            max-height: 320px;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f1f5f9;
+        }
+        
+        .multi-select-dropdown::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .multi-select-dropdown::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        
+        .multi-select-dropdown::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        
+        .multi-select-dropdown::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        .multi-select-option {
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .multi-select-option:last-child {
+            border-bottom: none;
+        }
+        
+        .multi-select-option:hover {
+            background-color: #eff6ff;
+        }
+        
+        .multi-select-option.selected {
+            background-color: #dbeafe;
+        }
+        
+        /* Selected Tags/Chips */
+        .selected-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 6px;
+        }
+        
+        .selected-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            background-color: #dbeafe;
+            color: #1e40af;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 500;
+            max-width: 100%;
+        }
+        
+        .selected-tag span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .selected-tag button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: #3b82f6;
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .selected-tag button:hover {
+            background-color: #1d4ed8;
+        }
+        
+        /* Styled Dropdown Styles (for single-select dropdowns) */
+        .styled-dropdown {
+            max-height: 320px;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f1f5f9;
+        }
+        
+        .styled-dropdown::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .styled-dropdown::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        
+        .styled-dropdown::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        
+        .styled-dropdown::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        .styled-dropdown-option {
+            border-bottom: 1px solid #f3f4f6;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: background-color 0.15s;
+        }
+        
+        .styled-dropdown-option:last-child {
+            border-bottom: none;
+        }
+        
+        .styled-dropdown-option:hover {
+            background-color: #eff6ff;
+        }
+        
+        .styled-dropdown-option.selected {
+            background-color: #dbeafe;
+            color: #1e40af;
+            font-weight: 500;
+        }
+        
+        /* Fund Search Dropdown Styles (legacy - kept for compatibility) */
         #fund-dropdown {
-            max-height: 320px; /* Approximately 10 items at ~32px each */
+            max-height: 320px;
             scrollbar-width: thin;
             scrollbar-color: #cbd5e1 #f1f5f9;
         }
@@ -379,40 +543,24 @@ SECURITY NOTE:
         /* Header Styles */
         .dashboard-header {
             background: white;
-            margin: -0.75rem -1.5rem 1.5rem -1.5rem;
-            padding: 1.25rem 1.5rem;
+            margin: -0.75rem -0.5rem 1.5rem -0.75rem;
+            padding: 0.5rem 0.5rem 0.5rem 0.75rem;
             border-bottom: 1px solid #e5e7eb;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
         
-        @media (min-width: 1024px) {
+        @media (min-width: 768px) {
             .dashboard-header {
-                margin: -2.5rem -5rem 2rem -5rem;
-                padding: 1.5rem 5rem;
+                margin: -1rem -0.75rem 1.5rem -1rem;
+                padding: 0.5rem 0.75rem 0.5rem 1rem;
             }
         }
         
-        /* Status Badge */
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.375rem;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-        
-        .status-badge-live,
-        .status-badge-success {
-            background-color: #dcfce7;
-            color: #166534;
-        }
-        
-        .status-badge-offline,
-        .status-badge-warning {
-            background-color: #fef3c7;
-            color: #92400e;
+        @media (min-width: 1024px) {
+            .dashboard-header {
+                margin: -2.5rem -1rem 1.5rem -1.5rem;
+                padding: 0.625rem 1rem 0.625rem 1.5rem;
+            }
         }
         
         /* Collapsible Filter Panel - Slides to right */
@@ -423,8 +571,9 @@ SECURITY NOTE:
         }
         
         .filter-aside.collapsed {
-            width: 3rem;
-            min-width: 3rem;
+            width: 0;
+            min-width: 0;
+            overflow: hidden;
         }
         
         .filter-panel-wrapper {
@@ -446,8 +595,9 @@ SECURITY NOTE:
             top: 1rem;
         }
         
+        /* Hide sidebar expand button - using header button instead */
         .filter-aside.collapsed .filter-expand-btn {
-            display: flex;
+            display: none;
         }
         
         .filter-content {
@@ -462,14 +612,6 @@ SECURITY NOTE:
             opacity: 0;
             padding-top: 0;
             padding-bottom: 0;
-        }
-        
-        .filter-toggle-icon {
-            transition: transform 0.3s ease-in-out;
-        }
-        
-        .filter-toggle-icon.collapsed {
-            transform: rotate(180deg);
         }
         
         /* Editable Title */
@@ -488,21 +630,35 @@ SECURITY NOTE:
             background-color: #eff6ff;
             outline: 2px solid #3b82f6;
         }
+        
+        /* Settings Modal Tabs */
+        .settings-tab {
+            transition: all 0.2s ease;
+        }
+        
+        .settings-tab:hover:not(.active) {
+            color: #374151;
+            background-color: #f9fafb;
+        }
+        
+        .settings-panel {
+            min-height: 300px;
+        }
     </style>
 </head>
 
-<body class="pt-3 md:pt-4 lg:pt-10 pb-6 md:pb-8 lg:pb-20 px-6 md:px-8 lg:px-20">
+<body class="pt-3 md:pt-4 lg:pt-10 pb-3 md:pb-4 lg:pb-8 pl-3 pr-2 md:pl-4 md:pr-3 lg:pl-6 lg:pr-4">
 
-    <!-- ===== API CONFIGURATION MODAL ===== -->
-    <!-- Modal for customers to enter their Airtable API credentials -->
-    <div id="api-config-modal" class="fixed inset-0 z-50 hidden">
-        <div class="modal-overlay absolute inset-0" onclick="closeConfigModal()"></div>
+    <!-- ===== UNIFIED SETTINGS MODAL ===== -->
+    <!-- Modal for configuring API, Brand Colors, and Dashboard Logo -->
+    <div id="settings-modal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-overlay absolute inset-0" onclick="closeSettingsModal()"></div>
         <div class="relative z-10 flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 transform transition-all">
+            <div class="bg-white rounded-xl shadow-2xl max-w-md w-full transform transition-all">
                 <!-- Modal Header -->
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-xl font-bold text-gray-800">Configure Airtable Connection</h2>
-                    <button onclick="closeConfigModal()" 
+                <div class="flex items-center justify-between p-6 pb-0">
+                    <h2 class="text-xl font-bold text-gray-800">Settings</h2>
+                    <button onclick="closeSettingsModal()" 
                             class="text-gray-400 hover:text-gray-600 transition-colors"
                             aria-label="Close modal">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -511,189 +667,331 @@ SECURITY NOTE:
                     </button>
                 </div>
                 
-                <!-- Configuration Form -->
-                <form id="api-config-form" onsubmit="saveApiConfig(event)">
-                    <!-- Personal Access Token Field -->
-                    <div class="mb-4">
-                        <label for="api-key-input" class="block text-sm font-medium text-gray-700 mb-1">
-                            Personal Access Token
-                        </label>
-                        <input type="password" 
-                               id="api-key-input" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                               placeholder="pat..."
-                               required>
-                        <p class="text-xs text-gray-500 mt-1">
-                            Get your token from <a href="https://airtable.com/create/tokens" target="_blank" class="text-blue-600 hover:underline">Airtable Settings</a>
-                        </p>
-                    </div>
-                    
-                    <!-- Base ID Field -->
-                    <div class="mb-4">
-                        <label for="base-id-input" class="block text-sm font-medium text-gray-700 mb-1">
-                            Base ID
-                        </label>
-                        <input type="text" 
-                               id="base-id-input" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                               placeholder="app..."
-                               required>
-                        <p class="text-xs text-gray-500 mt-1">
-                            Found in your Airtable base URL after "airtable.com/"
-                        </p>
-                    </div>
-                    
-                    <!-- Table ID Field -->
-                    <div class="mb-6">
-                        <label for="table-id-input" class="block text-sm font-medium text-gray-700 mb-1">
-                            Table ID
-                        </label>
-                        <input type="text" 
-                               id="table-id-input" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                               placeholder="tbl..."
-                               required>
-                        <p class="text-xs text-gray-500 mt-1">
-                            Found in your table URL after the Base ID
-                        </p>
-                    </div>
-                    
-                    <!-- Security Notice -->
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
-                        <div class="flex items-start">
-                            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                <!-- Tab Navigation -->
+                <div class="px-6 pt-4">
+                    <div class="flex justify-center border-b border-gray-200">
+                        <button onclick="switchSettingsTab('api')" 
+                                id="tab-api"
+                                class="settings-tab active flex items-center gap-2 px-3 py-2.5 text-sm font-medium border-b-2 border-blue-600 text-blue-600 -mb-px">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
-                            <p class="text-xs text-blue-700">
-                                <strong>Privacy:</strong> Your credentials are stored locally in your browser only and are never sent to any server except Airtable's API.
-                            </p>
-                        </div>
-                    </div>
-                    
-                    <!-- Form Actions -->
-                    <div class="flex gap-3">
-                        <button type="button" 
-                                onclick="clearApiConfig()" 
-                                class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                            Clear Saved
+                            API
                         </button>
-                        <button type="submit" 
-                                class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                            Connect
+                        <button onclick="switchSettingsTab('colors')" 
+                                id="tab-colors"
+                                class="settings-tab flex items-center gap-2 px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 -mb-px">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+                            </svg>
+                            Colors
+                        </button>
+                        <button onclick="switchSettingsTab('logo')" 
+                                id="tab-logo"
+                                class="settings-tab flex items-center gap-2 px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 -mb-px">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            Logo
+                        </button>
+                        <button onclick="switchSettingsTab('fields')" 
+                                id="tab-fields"
+                                class="settings-tab flex items-center gap-2 px-3 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 -mb-px">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                            </svg>
+                            Fields
                         </button>
                     </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===== BRAND COLORS CONFIGURATION MODAL ===== -->
-    <!-- Modal for customers to customize dashboard brand colors -->
-    <div id="brand-colors-modal" class="fixed inset-0 z-50 hidden">
-        <div class="modal-overlay absolute inset-0" onclick="closeBrandColorsModal()"></div>
-        <div class="relative z-10 flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 transform transition-all">
-                <!-- Modal Header -->
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-xl font-bold text-gray-800">Customize Brand Colors</h2>
-                    <button onclick="closeBrandColorsModal()" 
-                            class="text-gray-400 hover:text-gray-600 transition-colors"
-                            aria-label="Close modal">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
                 </div>
                 
-                <!-- Brand Colors Form -->
-                <form id="brand-colors-form" onsubmit="saveBrandColors(event)">
-                    <!-- 4 Brand Colors -->
-                    <div class="space-y-4 mb-6">
-                        <!-- Primary Color -->
-                        <div>
-                            <label for="color-primary" class="block text-sm font-medium text-gray-700 mb-1">
-                                Primary Color
-                            </label>
-                            <div class="flex items-center gap-3">
-                                <input type="color" id="color-primary" class="w-12 h-10 rounded cursor-pointer border border-gray-300">
-                                <input type="text" id="color-primary-hex" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono" placeholder="#003665">
+                <!-- Tab Content Container -->
+                <div class="p-6">
+                    <!-- ===== API CONNECTION TAB ===== -->
+                    <div id="panel-api" class="settings-panel">
+                        <form id="api-config-form" onsubmit="saveApiConfig(event)">
+                            <!-- Personal Access Token Field -->
+                            <div class="mb-4">
+                                <label for="api-key-input" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Personal Access Token
+                                </label>
+                                <input type="password" 
+                                       id="api-key-input" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                       placeholder="pat..."
+                                       required>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    Get your token from <a href="https://airtable.com/create/tokens" target="_blank" class="text-blue-600 hover:underline">Airtable Settings</a>
+                                </p>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">Main brand color for charts, KPI cards 1 & 3, pie chart</p>
-                        </div>
-                        
-                        <!-- Secondary Color -->
-                        <div>
-                            <label for="color-secondary" class="block text-sm font-medium text-gray-700 mb-1">
-                                Secondary Color
-                            </label>
-                            <div class="flex items-center gap-3">
-                                <input type="color" id="color-secondary" class="w-12 h-10 rounded cursor-pointer border border-gray-300">
-                                <input type="text" id="color-secondary-hex" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono" placeholder="#ff6600">
+                            
+                            <!-- Base ID Field -->
+                            <div class="mb-4">
+                                <label for="base-id-input" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Base ID
+                                </label>
+                                <input type="text" 
+                                       id="base-id-input" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                       placeholder="app..."
+                                       required>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    Found in your Airtable base URL after "airtable.com/"
+                                </p>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">Accent color for trend lines, KPI cards 2 & 4, bar charts</p>
-                        </div>
-                        
-                        <!-- Positive Color -->
-                        <div>
-                            <label for="color-positive" class="block text-sm font-medium text-gray-700 mb-1">
-                                Positive Color
-                            </label>
-                            <div class="flex items-center gap-3">
-                                <input type="color" id="color-positive" class="w-12 h-10 rounded cursor-pointer border border-gray-300">
-                                <input type="text" id="color-positive-hex" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono" placeholder="#10b981">
+                            
+                            <!-- Table ID Field -->
+                            <div class="mb-6">
+                                <label for="table-id-input" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Table ID
+                                </label>
+                                <input type="text" 
+                                       id="table-id-input" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                       placeholder="tbl..."
+                                       required>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    Found in your table URL after the Base ID
+                                </p>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">Color for gains, positive changes, and growth indicators</p>
-                        </div>
-                        
-                        <!-- Negative Color -->
-                        <div>
-                            <label for="color-negative" class="block text-sm font-medium text-gray-700 mb-1">
-                                Negative Color
-                            </label>
-                            <div class="flex items-center gap-3">
-                                <input type="color" id="color-negative" class="w-12 h-10 rounded cursor-pointer border border-gray-300">
-                                <input type="text" id="color-negative-hex" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono" placeholder="#ef4444">
+                            
+                            <!-- Security Notice -->
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <p class="text-xs text-blue-700">
+                                        <strong>Privacy:</strong> Your credentials are stored locally in your browser only and are never sent to any server except Airtable's API.
+                                    </p>
+                                </div>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">Color for losses, negative changes, and warning indicators</p>
-                        </div>
+                            
+                            <!-- Form Actions -->
+                            <div class="flex gap-3">
+                                <button type="button" 
+                                        onclick="clearApiConfig()" 
+                                        class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                                    Clear Saved
+                                </button>
+                                <button type="submit" 
+                                        class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                                    Connect
+                                </button>
+                            </div>
+                        </form>
                     </div>
+                    
+                    <!-- ===== BRAND COLORS TAB ===== -->
+                    <div id="panel-colors" class="settings-panel hidden">
+                        <form id="brand-colors-form" onsubmit="saveBrandColors(event)">
+                            <!-- 4 Brand Colors -->
+                            <div class="space-y-4 mb-6">
+                                <!-- Primary Color -->
+                                <div>
+                                    <label for="color-primary" class="block text-sm font-medium text-gray-700 mb-1">
+                                        Primary Color
+                                    </label>
+                                    <div class="flex items-center gap-3">
+                                        <input type="color" id="color-primary" class="w-12 h-10 rounded cursor-pointer border border-gray-300">
+                                        <input type="text" id="color-primary-hex" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono" placeholder="#003665">
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">Main brand color for charts, KPI cards 1 & 3, pie chart</p>
+                                </div>
+                                
+                                <!-- Secondary Color -->
+                                <div>
+                                    <label for="color-secondary" class="block text-sm font-medium text-gray-700 mb-1">
+                                        Secondary Color
+                                    </label>
+                                    <div class="flex items-center gap-3">
+                                        <input type="color" id="color-secondary" class="w-12 h-10 rounded cursor-pointer border border-gray-300">
+                                        <input type="text" id="color-secondary-hex" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono" placeholder="#ff6600">
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">Accent color for trend lines, KPI cards 2 & 4, bar charts</p>
+                                </div>
+                                
+                                <!-- Positive Color -->
+                                <div>
+                                    <label for="color-positive" class="block text-sm font-medium text-gray-700 mb-1">
+                                        Positive Color
+                                    </label>
+                                    <div class="flex items-center gap-3">
+                                        <input type="color" id="color-positive" class="w-12 h-10 rounded cursor-pointer border border-gray-300">
+                                        <input type="text" id="color-positive-hex" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono" placeholder="#10b981">
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">Color for gains, positive changes, and growth indicators</p>
+                                </div>
+                                
+                                <!-- Negative Color -->
+                                <div>
+                                    <label for="color-negative" class="block text-sm font-medium text-gray-700 mb-1">
+                                        Negative Color
+                                    </label>
+                                    <div class="flex items-center gap-3">
+                                        <input type="color" id="color-negative" class="w-12 h-10 rounded cursor-pointer border border-gray-300">
+                                        <input type="text" id="color-negative-hex" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono" placeholder="#ef4444">
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">Color for losses, negative changes, and warning indicators</p>
+                                </div>
+                            </div>
 
-                    <!-- Color Preview Section -->
-                    <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-                        <h3 class="text-sm font-semibold text-gray-700 mb-3">Preview</h3>
-                        <div class="flex gap-3" id="color-preview">
-                            <div class="flex-1 text-center">
-                                <div class="w-full h-10 rounded-lg" id="preview-primary"></div>
-                                <span class="text-xs text-gray-500 mt-1 block">Primary</span>
+                            <!-- Color Preview Section -->
+                            <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                                <h3 class="text-sm font-semibold text-gray-700 mb-3">Preview</h3>
+                                <div class="flex gap-3" id="color-preview">
+                                    <div class="flex-1 text-center">
+                                        <div class="w-full h-10 rounded-lg" id="preview-primary"></div>
+                                        <span class="text-xs text-gray-500 mt-1 block">Primary</span>
+                                    </div>
+                                    <div class="flex-1 text-center">
+                                        <div class="w-full h-10 rounded-lg" id="preview-secondary"></div>
+                                        <span class="text-xs text-gray-500 mt-1 block">Secondary</span>
+                                    </div>
+                                    <div class="flex-1 text-center">
+                                        <div class="w-full h-10 rounded-lg" id="preview-positive"></div>
+                                        <span class="text-xs text-gray-500 mt-1 block">Positive</span>
+                                    </div>
+                                    <div class="flex-1 text-center">
+                                        <div class="w-full h-10 rounded-lg" id="preview-negative"></div>
+                                        <span class="text-xs text-gray-500 mt-1 block">Negative</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="flex-1 text-center">
-                                <div class="w-full h-10 rounded-lg" id="preview-secondary"></div>
-                                <span class="text-xs text-gray-500 mt-1 block">Secondary</span>
+                            
+                            <!-- Form Actions -->
+                            <div class="flex gap-3">
+                                <button type="button" 
+                                        onclick="resetBrandColors()" 
+                                        class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                                    Reset to Default
+                                </button>
+                                <button type="submit" 
+                                        class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                                    Save Colors
+                                </button>
                             </div>
-                            <div class="flex-1 text-center">
-                                <div class="w-full h-10 rounded-lg" id="preview-positive"></div>
-                                <span class="text-xs text-gray-500 mt-1 block">Positive</span>
+                        </form>
+                    </div>
+                    
+                    <!-- ===== DASHBOARD LOGO TAB ===== -->
+                    <div id="panel-logo" class="settings-panel hidden">
+                        <div class="mb-6">
+                            <p class="text-sm text-gray-600 mb-4">Upload your organization's logo or seal to display in the dashboard header.</p>
+                            
+                            <!-- Logo Preview -->
+                            <div class="flex flex-col items-center gap-4 p-6 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+                                <div id="logo-preview-container" class="w-24 h-24 rounded-lg border border-gray-200 flex items-center justify-center bg-white overflow-hidden">
+                                    <img id="logo-preview" src="" alt="Logo preview" class="hidden w-full h-full object-contain">
+                                    <svg id="logo-placeholder" class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                
+                                <!-- Upload Controls -->
+                                <div class="flex flex-col items-center gap-2">
+                                    <input type="file" 
+                                           id="logo-upload" 
+                                           accept="image/*" 
+                                           class="hidden" 
+                                           onchange="handleLogoUpload(event)">
+                                    <button type="button" 
+                                            onclick="document.getElementById('logo-upload').click()" 
+                                            class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                                        Choose Image
+                                    </button>
+                                    <button type="button" 
+                                            onclick="removeLogo()" 
+                                            id="remove-logo-btn"
+                                            class="hidden px-4 py-2 text-sm text-red-600 hover:text-red-800 transition-colors">
+                                        Remove Logo
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-500 text-center">Recommended: Square image (PNG or JPG)<br>Displays at 96x96px in the header</p>
                             </div>
-                            <div class="flex-1 text-center">
-                                <div class="w-full h-10 rounded-lg" id="preview-negative"></div>
-                                <span class="text-xs text-gray-500 mt-1 block">Negative</span>
+                        </div>
+                        
+                        <!-- Privacy Notice -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <div class="flex items-start">
+                                <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                </svg>
+                                <p class="text-xs text-blue-700">
+                                    <strong>Privacy:</strong> Your logo is stored locally in your browser and is never uploaded to any server.
+                                </p>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Form Actions -->
-                    <div class="flex gap-3">
-                        <button type="button" 
-                                onclick="resetBrandColors()" 
-                                class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                            Reset to Default
-                        </button>
-                        <button type="submit" 
-                                class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                            Save Colors
-                        </button>
+                    <!-- ===== FIELD NAMES TAB ===== -->
+                    <div id="panel-fields" class="settings-panel hidden">
+                        <form id="field-names-form" onsubmit="saveFieldLabels(event)">
+                            <p class="text-sm text-gray-600 mb-4">Customize how field names appear throughout the dashboard. Your Airtable columns should be named Field 1, Field 2, and Field 3.</p>
+                            
+                            <!-- Field 1 Label -->
+                            <div class="mb-4">
+                                <label for="field1-label" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Field 1 Label
+                                </label>
+                                <input type="text" 
+                                       id="field1-label" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                       placeholder="College">
+                                <p class="text-xs text-gray-500 mt-1">Maps to "Field 1" column in Airtable</p>
+                            </div>
+                            
+                            <!-- Field 2 Label -->
+                            <div class="mb-4">
+                                <label for="field2-label" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Field 2 Label
+                                </label>
+                                <input type="text" 
+                                       id="field2-label" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                       placeholder="School">
+                                <p class="text-xs text-gray-500 mt-1">Maps to "Field 2" column in Airtable</p>
+                            </div>
+                            
+                            <!-- Field 3 Label -->
+                            <div class="mb-6">
+                                <label for="field3-label" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Field 3 Label
+                                </label>
+                                <input type="text" 
+                                       id="field3-label" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                       placeholder="Purpose">
+                                <p class="text-xs text-gray-500 mt-1">Maps to "Field 3" column in Airtable</p>
+                            </div>
+                            
+                            <!-- Info Notice -->
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <p class="text-xs text-blue-700">
+                                        <strong>Note:</strong> These labels customize how fields are displayed in filters, charts, and tables. Your Airtable column names remain unchanged.
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <!-- Form Actions -->
+                            <div class="flex gap-3">
+                                <button type="button" 
+                                        onclick="resetFieldLabels()" 
+                                        class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                                    Reset to Default
+                                </button>
+                                <button type="submit" 
+                                        class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                                    Save Labels
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
@@ -789,7 +1087,12 @@ SECURITY NOTE:
     <header class="dashboard-header">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <!-- Title and Subtitle -->
-            <div>
+            <div class="flex items-center gap-1">
+                <!-- Organization Logo -->
+                <div id="header-logo-container" class="hidden flex-shrink-0">
+                    <img id="header-logo" src="" alt="Organization logo" class="w-24 h-24 object-contain">
+                </div>
+                <div>
                 <h1 id="dashboard-title" 
                     class="text-2xl lg:text-3xl font-bold text-gray-800 editable-title cursor-pointer"
                     contenteditable="true"
@@ -808,38 +1111,41 @@ SECURITY NOTE:
                     <span class="font-medium">Filters Applied:</span>
                     <span id="print-filters-list">None</span>
                 </div>
+                </div>
             </div>
             
             <!-- Header Controls -->
             <div class="flex flex-wrap items-center gap-3 no-print">
-                <!-- Data Source Status Badge -->
-                <div id="source-badge" class="status-badge status-badge-offline" aria-live="polite">
-                    <span class="w-2 h-2 rounded-full bg-current opacity-70"></span>
-                    <span>Initializing...</span>
-                </div>
+                <!-- Filter Panel Toggle -->
+                <button id="header-filter-toggle" 
+                        onclick="toggleFilterPanel()" 
+                        class="btn-secondary flex items-center justify-center w-9 h-9 p-0"
+                        aria-label="Toggle filter panel"
+                        title="Filters">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                    </svg>
+                </button>
                 
-                <!-- Divider -->
-                <div class="hidden lg:block w-px h-8 bg-gray-200"></div>
+                <!-- Print to PDF Button -->
+                <button onclick="printDashboard()" 
+                        class="btn-secondary flex items-center justify-center w-9 h-9 p-0"
+                        aria-label="Print dashboard to PDF"
+                        title="Print to PDF">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                    </svg>
+                </button>
                 
-                <!-- API Configuration Button -->
-                <button onclick="openConfigModal()" 
-                        class="btn-secondary flex items-center gap-2 text-sm"
-                        aria-label="Configure API connection">
+                <!-- Settings Button (opens unified settings modal) -->
+                <button onclick="openSettingsModal()" 
+                        class="btn-secondary flex items-center justify-center w-9 h-9 p-0"
+                        aria-label="Open settings"
+                        title="Settings">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
-                    <span>Settings</span>
-                </button>
-                
-                <!-- Brand Colors Button -->
-                <button onclick="openBrandColorsModal()" 
-                        class="btn-secondary flex items-center gap-2 text-sm"
-                        aria-label="Customize brand colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
-                    </svg>
-                    <span>Colors</span>
                 </button>
             </div>
         </div>
@@ -888,54 +1194,63 @@ SECURITY NOTE:
             <!-- ===== LEFT SIDE: Main Dashboard Content ===== -->
             <div class="flex-1 min-w-0">
                 
-                <!-- ===== KEY PERFORMANCE INDICATORS (KPIs) ===== -->
-                <!-- Top-level metrics cards showing portfolio summary -->
-                <section aria-label="Key Performance Indicators">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" id="metrics-container">
-                        <!-- KPI cards are dynamically generated -->
+                <!-- ===== TOP SECTION: KPIs + History (left) & Net Asset Summary (right) ===== -->
+                <section aria-label="Key Metrics and Summary" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <!-- Left Column: KPIs stacked 2x2 + History Chart -->
+                    <div class="flex flex-col gap-6">
+                        <!-- KPIs in 2x2 grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="metrics-container">
+                            <!-- KPI cards are dynamically generated -->
+                        </div>
+                        
+                        <!-- Market Value Trend Chart (Line Chart) -->
+                        <div class="card flex flex-col flex-1">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="section-title">Endowment History</h3>
+                                <!-- <span class="section-subtitle">Historical</span> -->
+                            </div>
+                            <div class="flex-1 min-h-0 relative" style="height: 250px;">
+                                <canvas id="trendChart" aria-label="Line chart showing market value trend over time"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column: Net Asset Summary (full height) -->
+                    <div class="card flex flex-col">
+                        <h3 class="section-title mb-1">Endowment Net Asset Summary</h3>
+                        <p class="section-subtitle mb-3"><span class="formatted-date"></span></p>
+                        <div id="rollforward-summary" class="text-sm flex-1">
+                            <!-- Populated dynamically -->
+                        </div>
                     </div>
                 </section>
 
-        <!-- ===== CHARTS ROW 1: Rollforward & Trend ===== -->
-        <section aria-label="Performance Charts" class="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
-            <!-- Rollforward Financial Summary -->
-            <div class="card lg:col-span-2">
-                <h3 class="section-title mb-1">Market Value Rollforward</h3>
+        <!-- ===== CHARTS ROW 2: Classification & Purpose ===== -->
+        <section aria-label="Additional Analysis Charts" class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Market Value & Historical Gift by College Chart (Horizontal Stacked Bar) -->
+            <div class="card">
+                <!-- <h3 class="section-title mb-1">MV & Historical Gift by College</h3> -->
                 <p class="section-subtitle mb-3"><span class="formatted-date"></span></p>
-                <div id="rollforward-summary" class="text-sm">
-                    <!-- Populated dynamically -->
+                <div class="h-64">
+                    <canvas id="collegeChart" aria-label="Horizontal stacked bar chart showing market value and historical gift by college"></canvas>
                 </div>
             </div>
             
-            <!-- Market Value Trend Chart (Line Chart) -->
-            <div class="card lg:col-span-3 flex flex-col">
-                <div class="flex items-center justify-between mb-2">
-                    <h3 class="section-title">Total Market Value Trend</h3>
-                    <span class="section-subtitle">Historical</span>
-                </div>
-                <div class="flex-1 min-h-0 relative" style="height: 300px;">
-                    <canvas id="trendChart" aria-label="Line chart showing market value trend over time"></canvas>
-                </div>
-            </div>
-        </section>
-
-        <!-- ===== CHARTS ROW 2: Classification & Purpose ===== -->
-        <section aria-label="Additional Analysis Charts" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <!-- Fund Type Distribution Chart (Doughnut Chart) -->
             <div class="card">
-                <h3 class="section-title mb-1">Fund Type Distribution</h3>
+                <!-- <h3 class="section-title mb-1">Fund Type</h3> -->
                 <p class="section-subtitle"><span class="formatted-date"></span></p>
                 <div class="h-64 flex justify-center">
                     <canvas id="classificationChart" aria-label="Doughnut chart showing fund type distribution"></canvas>
                 </div>
             </div>
             
-            <!-- Market Value by Purpose Chart (Bar Chart) -->
+            <!-- Market Value & Historical Gift by Purpose Chart (Horizontal Grouped Bar) -->
             <div class="card">
-                <h3 class="section-title mb-1">Market Value by Purpose</h3>
+                <!-- <h3 class="section-title mb-1">MV & Historical Gift by Purpose</h3> -->
                 <p class="section-subtitle mb-3"><span class="formatted-date"></span></p>
                 <div class="h-64">
-                    <canvas id="purposeChart" aria-label="Bar chart showing market value breakdown by purpose"></canvas>
+                    <canvas id="purposeChart" aria-label="Horizontal grouped bar chart showing market value and historical gift by purpose"></canvas>
                 </div>
             </div>
         </section>
@@ -944,7 +1259,7 @@ SECURITY NOTE:
         <section aria-label="Fund Details Table" class="card overflow-hidden">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
                 <div>
-                    <h3 class="section-title">Endowment Transaction Rollforward</h3>
+                    <h3 class="section-title">Endowment Financial Rollforward</h3>
                     <p class="section-subtitle mt-1"><span class="formatted-date"></span></p>
                 </div>
                 
@@ -963,8 +1278,9 @@ SECURITY NOTE:
                     </div>
                     
                     <!-- Export Button -->
-                    <button onclick="exportToExcel()" 
-                            class="btn-success flex items-center justify-center gap-2 text-sm">
+                    <button id="export-btn"
+                            onclick="exportToExcel()" 
+                            class="flex items-center justify-center gap-2 text-sm text-white font-medium px-4 py-2 rounded-lg shadow-sm transition-all duration-200 hover:opacity-90">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
@@ -977,15 +1293,15 @@ SECURITY NOTE:
                 <table class="data-table w-full table-auto text-xs" role="table" id="funds-table">
                     <thead>
                         <tr>
-                            <th scope="col" class="px-2 py-2 text-left min-w-[200px]">Fund Name</th>
-                            <th scope="col" class="px-2 py-2 text-left whitespace-nowrap">Purpose</th>
-                            <th scope="col" class="px-2 py-2 text-right whitespace-nowrap">Beg. Hist. Gift</th>
-                            <th scope="col" class="px-2 py-2 text-right whitespace-nowrap">Beg. MV</th>
-                            <th scope="col" class="px-2 py-2 text-right whitespace-nowrap">Net Invest.</th>
-                            <th scope="col" class="px-2 py-2 text-right whitespace-nowrap">Net Fund</th>
-                            <th scope="col" class="px-2 py-2 text-right whitespace-nowrap">End. MV</th>
-                            <th scope="col" class="px-2 py-2 text-right whitespace-nowrap">End. Hist. Gift</th>
-                            <th scope="col" class="px-2 py-2 text-right whitespace-nowrap">Change</th>
+                            <th scope="col" class="px-2 py-2 text-center min-w-[200px]">Fund Name</th>
+                            <th scope="col" class="px-2 py-2 text-center">Purpose</th>
+                            <th scope="col" class="px-2 py-2 text-center">Beg. Historical Gift</th>
+                            <th scope="col" class="px-2 py-2 text-center">Beg. Market Value</th>
+                            <th scope="col" class="px-2 py-2 text-center">Net Investment Activity</th>
+                            <th scope="col" class="px-2 py-2 text-center">Net Fund Activity</th>
+                            <th scope="col" class="px-2 py-2 text-center">End. Market Value</th>
+                            <th scope="col" class="px-2 py-2 text-center">End. Historical Gift</th>
+                            <th scope="col" class="px-2 py-2 text-center">% Change</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100" id="top-funds-body">
@@ -1030,7 +1346,7 @@ SECURITY NOTE:
                 <p class="text-sm text-gray-500">
                     <span class="font-medium">Endowment Dashboard</span> • Last updated: <span id="last-updated">--</span>
                 </p>
-                <p class="text-sm text-gray-400">Powered by <a href="https://www.linkedin.com/in/richard-westerfield/" target="_blank" rel="noopener noreferrer" class="hover:text-gray-600 underline transition-colors">Richard Westerfield</a></p>
+                <p class="text-sm text-gray-400">Created by <a href="https://www.linkedin.com/in/richard-westerfield/" target="_blank" rel="noopener noreferrer" class="hover:text-gray-600 underline transition-colors">Richard Westerfield</a></p>
             </div>
         </footer>
         
@@ -1051,34 +1367,47 @@ SECURITY NOTE:
                 <!-- Filter Panel (hidden when collapsed) -->
                 <div class="filter-panel-wrapper">
                 <div class="filter-panel sticky top-4">
-                    <div class="filter-panel-header cursor-pointer" onclick="toggleFilterPanel()">
+                    <div class="filter-panel-header">
                         <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
                         </svg>
                         <h3 class="text-base font-semibold text-gray-800">Filters</h3>
-                        <div class="ml-auto flex items-center gap-3">
-                            <button onclick="event.stopPropagation(); resetFilters()" class="text-xs text-blue-600 hover:text-blue-800 font-medium hover:underline">
+                        <div class="ml-auto">
+                            <button onclick="resetFilters()" class="text-xs text-blue-600 hover:text-blue-800 font-medium hover:underline">
                                 Reset All
                             </button>
-                            <svg id="filter-toggle-icon" class="filter-toggle-icon w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" title="Collapse Filters">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7"/>
-                            </svg>
                         </div>
                     </div>
                     
                     <!-- Collapsible Filter Content -->
                     <div id="filter-content" class="filter-content">
-                    <!-- Reporting Period Filter -->
+                    <!-- Reporting Period Filter with Styled Dropdown -->
                     <div class="mb-4">
-                        <label for="date-filter" class="block text-sm font-medium text-gray-700 mb-1">
+                        <label for="date-filter-display" class="block text-sm font-medium text-gray-700 mb-1">
                             Reporting Period
                         </label>
-                        <select id="date-filter" class="filter-select" onchange="applyFilters()" aria-label="Select reporting period">
-                            <!-- Options populated dynamically via JavaScript -->
-                        </select>
+                        <div class="relative">
+                            <button type="button" 
+                                   id="date-filter-display" 
+                                   class="filter-select pr-8 text-left flex items-center justify-between cursor-pointer"
+                                   onclick="toggleStyledDropdown('date')"
+                                   aria-label="Select reporting period">
+                                <span id="date-filter-text">Select period...</span>
+                                <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                            <!-- Custom scrollable dropdown -->
+                            <div id="date-dropdown" 
+                                 class="styled-dropdown absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg hidden max-h-64 overflow-y-auto">
+                                <!-- Options populated dynamically -->
+                            </div>
+                        </div>
+                        <!-- Hidden input to store the selected value -->
+                        <input type="hidden" id="date-filter" value="">
                     </div>
                     
-                    <!-- Fund ID / Name Filter with Search -->
+                    <!-- Fund ID / Name Filter with Multi-Select Search -->
                     <div class="mb-4">
                         <label for="filter-fund-search" class="block text-sm font-medium text-gray-700 mb-1">
                             Fund ID or Name
@@ -1089,11 +1418,11 @@ SECURITY NOTE:
                                    class="filter-select pr-8" 
                                    placeholder="Search funds..."
                                    autocomplete="off"
-                                   oninput="handleFundSearchInput(this.value)"
-                                   onfocus="showFundDropdown()"
-                                   onblur="hideFundDropdownDelayed()">
+                                   oninput="handleMultiSelectSearch('fund', this.value)"
+                                   onfocus="showMultiSelectDropdown('fund')"
+                                   onblur="hideMultiSelectDropdownDelayed('fund')">
                             <button type="button" 
-                                    onclick="clearFundSearch()" 
+                                    onclick="clearMultiSelectSearch('fund')" 
                                     id="clear-fund-search"
                                     class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden"
                                     aria-label="Clear search">
@@ -1103,67 +1432,169 @@ SECURITY NOTE:
                             </button>
                             <!-- Custom scrollable dropdown -->
                             <div id="fund-dropdown" 
-                                 class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg hidden max-h-64 overflow-y-auto">
+                                 class="multi-select-dropdown absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg hidden max-h-64 overflow-y-auto">
                                 <!-- Options populated dynamically -->
                             </div>
                         </div>
-                        <!-- Hidden input to store the selected fund ID -->
+                        <!-- Selected tags container -->
+                        <div id="fund-selected-tags" class="selected-tags"></div>
+                        <!-- Hidden input to store selected fund IDs (comma-separated) -->
                         <input type="hidden" id="filter-fund" value="">
                     </div>
                     
-                    <!-- College Filter -->
+                    <!-- College Filter with Multi-Select Search -->
                     <div class="mb-4">
-                        <label for="filter-operating-unit" class="block text-sm font-medium text-gray-700 mb-1">
+                        <label for="filter-college-search" class="block text-sm font-medium text-gray-700 mb-1">
                             College
                         </label>
-                        <select id="filter-operating-unit" class="filter-select" onchange="applyFilters()">
-                            <option value="">All Colleges</option>
-                            <!-- Options populated dynamically -->
-                        </select>
+                        <div class="relative">
+                            <input type="text" 
+                                   id="filter-college-search" 
+                                   class="filter-select pr-8" 
+                                   placeholder="Search colleges..."
+                                   autocomplete="off"
+                                   oninput="handleMultiSelectSearch('college', this.value)"
+                                   onfocus="showMultiSelectDropdown('college')"
+                                   onblur="hideMultiSelectDropdownDelayed('college')">
+                            <button type="button" 
+                                    onclick="clearMultiSelectSearch('college')" 
+                                    id="clear-college-search"
+                                    class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden"
+                                    aria-label="Clear search">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                            <!-- Custom scrollable dropdown -->
+                            <div id="college-dropdown" 
+                                 class="multi-select-dropdown absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg hidden max-h-64 overflow-y-auto">
+                                <!-- Options populated dynamically -->
+                            </div>
+                        </div>
+                        <!-- Selected tags container -->
+                        <div id="college-selected-tags" class="selected-tags"></div>
+                        <!-- Hidden input to store selected colleges (comma-separated) -->
+                        <input type="hidden" id="filter-operating-unit" value="">
                     </div>
                     
-                    <!-- School Filter -->
+                    <!-- School Filter with Multi-Select Search -->
                     <div class="mb-4">
-                        <label for="filter-reporting-unit" class="block text-sm font-medium text-gray-700 mb-1">
+                        <label for="filter-school-search" class="block text-sm font-medium text-gray-700 mb-1">
                             School
                         </label>
-                        <select id="filter-reporting-unit" class="filter-select" onchange="applyFilters()">
-                            <option value="">All Schools</option>
-                            <!-- Options populated dynamically -->
-                        </select>
+                        <div class="relative">
+                            <input type="text" 
+                                   id="filter-school-search" 
+                                   class="filter-select pr-8" 
+                                   placeholder="Search schools..."
+                                   autocomplete="off"
+                                   oninput="handleMultiSelectSearch('school', this.value)"
+                                   onfocus="showMultiSelectDropdown('school')"
+                                   onblur="hideMultiSelectDropdownDelayed('school')">
+                            <button type="button" 
+                                    onclick="clearMultiSelectSearch('school')" 
+                                    id="clear-school-search"
+                                    class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden"
+                                    aria-label="Clear search">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                            <!-- Custom scrollable dropdown -->
+                            <div id="school-dropdown" 
+                                 class="multi-select-dropdown absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg hidden max-h-64 overflow-y-auto">
+                                <!-- Options populated dynamically -->
+                            </div>
+                        </div>
+                        <!-- Selected tags container -->
+                        <div id="school-selected-tags" class="selected-tags"></div>
+                        <!-- Hidden input to store selected schools (comma-separated) -->
+                        <input type="hidden" id="filter-reporting-unit" value="">
                     </div>
                     
-                    <!-- Net Asset Classification Filter -->
+                    <!-- Purpose Filter with Multi-Select Search -->
                     <div class="mb-4">
-                        <label for="filter-nac" class="block text-sm font-medium text-gray-700 mb-1">
-                            Net Asset Classification
-                        </label>
-                        <select id="filter-nac" class="filter-select" onchange="applyFilters()">
-                            <option value="">All Classifications</option>
-                            <!-- Options populated dynamically -->
-                        </select>
-                    </div>
-                    
-                    <!-- Fund Type Filter -->
-                    <div class="mb-4">
-                        <label for="filter-fund-type" class="block text-sm font-medium text-gray-700 mb-1">
-                            Fund Type
-                        </label>
-                        <select id="filter-fund-type" class="filter-select" onchange="applyFilters()">
-                            <option value="">All Types</option>
-                            <!-- Options populated dynamically -->
-                        </select>
-                    </div>
-                    
-                    <!-- Purpose Filter -->
-                    <div class="mb-4">
-                        <label for="filter-purpose" class="block text-sm font-medium text-gray-700 mb-1">
+                        <label for="filter-purpose-search" class="block text-sm font-medium text-gray-700 mb-1">
                             Purpose
                         </label>
-                        <select id="filter-purpose" class="filter-select" onchange="applyFilters()">
-                            <option value="">All Purposes</option>
-                            <!-- Options populated dynamically -->
-                        </select>
+                        <div class="relative">
+                            <input type="text" 
+                                   id="filter-purpose-search" 
+                                   class="filter-select pr-8" 
+                                   placeholder="Search purposes..."
+                                   autocomplete="off"
+                                   oninput="handleMultiSelectSearch('purpose', this.value)"
+                                   onfocus="showMultiSelectDropdown('purpose')"
+                                   onblur="hideMultiSelectDropdownDelayed('purpose')">
+                            <button type="button" 
+                                    onclick="clearMultiSelectSearch('purpose')" 
+                                    id="clear-purpose-search"
+                                    class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden"
+                                    aria-label="Clear search">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                            <!-- Custom scrollable dropdown -->
+                            <div id="purpose-dropdown" 
+                                 class="multi-select-dropdown absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg hidden max-h-64 overflow-y-auto">
+                                <!-- Options populated dynamically -->
+                            </div>
+                        </div>
+                        <!-- Selected tags container -->
+                        <div id="purpose-selected-tags" class="selected-tags"></div>
+                        <!-- Hidden input to store selected purposes (comma-separated) -->
+                        <input type="hidden" id="filter-purpose" value="">
+                    </div>
+                    
+                    <!-- Net Asset Classification Filter with Styled Dropdown -->
+                    <div class="mb-4">
+                        <label for="nac-filter-display" class="block text-sm font-medium text-gray-700 mb-1">
+                            Net Asset Classification
+                        </label>
+                        <div class="relative">
+                            <button type="button" 
+                                   id="nac-filter-display" 
+                                   class="filter-select pr-8 text-left flex items-center justify-between cursor-pointer"
+                                   onclick="toggleStyledDropdown('nac')">
+                                <span id="nac-filter-text">All Classifications</span>
+                                <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                            <!-- Custom scrollable dropdown -->
+                            <div id="nac-dropdown" 
+                                 class="styled-dropdown absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg hidden max-h-64 overflow-y-auto">
+                                <!-- Options populated dynamically -->
+                            </div>
+                        </div>
+                        <!-- Hidden input to store the selected value -->
+                        <input type="hidden" id="filter-nac" value="">
+                    </div>
+                    
+                    <!-- Fund Type Filter with Styled Dropdown -->
+                    <div class="mb-4">
+                        <label for="fundtype-filter-display" class="block text-sm font-medium text-gray-700 mb-1">
+                            Fund Type
+                        </label>
+                        <div class="relative">
+                            <button type="button" 
+                                   id="fundtype-filter-display" 
+                                   class="filter-select pr-8 text-left flex items-center justify-between cursor-pointer"
+                                   onclick="toggleStyledDropdown('fundtype')">
+                                <span id="fundtype-filter-text">All Types</span>
+                                <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                            <!-- Custom scrollable dropdown -->
+                            <div id="fundtype-dropdown" 
+                                 class="styled-dropdown absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg hidden max-h-64 overflow-y-auto">
+                                <!-- Options populated dynamically -->
+                            </div>
+                        </div>
+                        <!-- Hidden input to store the selected value -->
+                        <input type="hidden" id="filter-fund-type" value="">
                     </div>
                     
                     <!-- Ending MV Range Filter -->
@@ -1190,7 +1621,7 @@ SECURITY NOTE:
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" 
                                    id="filter-underwater" 
-                                   class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                   class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-0 focus:outline-none"
                                    onchange="applyFilters()">
                             <span class="text-sm font-medium text-gray-700">Underwater Funds Only</span>
                         </label>
@@ -1249,7 +1680,9 @@ const STORAGE_KEYS = {
     BASE_ID: 'endowment_dashboard_base_id',
     TABLE_ID: 'endowment_dashboard_table_id',
     BRAND_COLORS: 'endowment_dashboard_brand_colors',
-    DASHBOARD_TITLE: 'endowment_dashboard_title'
+    DASHBOARD_TITLE: 'endowment_dashboard_title',
+    LOGO_IMAGE: 'endowment_dashboard_logo',
+    FIELD_LABELS: 'endowment_dashboard_field_labels'
 };
 
 /**
@@ -1349,9 +1782,9 @@ const FIELD_NAMES = {
     fundId: 'Fund ID',
     fundName: 'Fund Name',
     fundType: 'Fund Type',
-    purpose: 'Purpose',
-    operatingUnit: 'College',
-    reportingUnit: 'School',
+    purpose: 'Field 3',
+    college: 'Field 1',
+    school: 'Field 2',
     beginningMV: 'Beginning MV',
     endingMV: 'Ending MV',
     beginningHistoricalGift: 'Beginning Historical Gift',
@@ -1534,32 +1967,391 @@ function handleTitleKeydown(event) {
 }
 
 // ============================================================================
-// SECTION 4: API CONFIGURATION MODAL
+// SECTION 3C: LOGO IMAGE MANAGEMENT
 // ============================================================================
 
 /**
- * Opens the API configuration modal and populates with saved credentials.
+ * Loads and displays the saved logo from localStorage.
+ * Called on page load.
  */
-function openConfigModal() {
-    const modal = document.getElementById('api-config-modal');
+function loadLogo() {
+    const savedLogo = getStoredValue(STORAGE_KEYS.LOGO_IMAGE);
+    if (savedLogo) {
+        // Update header logo
+        const headerLogoContainer = document.getElementById('header-logo-container');
+        const headerLogo = document.getElementById('header-logo');
+        headerLogo.src = savedLogo;
+        headerLogoContainer.classList.remove('hidden');
+        
+        // Update settings preview if modal exists
+        updateLogoPreview(savedLogo);
+    }
+}
+
+/**
+ * Updates the logo preview in the settings modal.
+ * 
+ * @param {string} dataUrl - The base64 data URL of the image
+ */
+function updateLogoPreview(dataUrl) {
+    const logoPreview = document.getElementById('logo-preview');
+    const logoPlaceholder = document.getElementById('logo-placeholder');
+    const removeBtn = document.getElementById('remove-logo-btn');
+    
+    if (dataUrl) {
+        logoPreview.src = dataUrl;
+        logoPreview.classList.remove('hidden');
+        logoPlaceholder.classList.add('hidden');
+        removeBtn.classList.remove('hidden');
+    } else {
+        logoPreview.src = '';
+        logoPreview.classList.add('hidden');
+        logoPlaceholder.classList.remove('hidden');
+        removeBtn.classList.add('hidden');
+    }
+}
+
+/**
+ * Handles logo file upload.
+ * Converts the image to base64 and saves to localStorage.
+ * 
+ * @param {Event} event - The file input change event
+ */
+function handleLogoUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+        alert('Please upload an image file.');
+        return;
+    }
+    
+    // Validate file size (max 500KB to stay within localStorage limits)
+    if (file.size > 500 * 1024) {
+        alert('Image is too large. Please upload an image under 500KB.');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const dataUrl = e.target.result;
+        
+        // Create an image to resize if needed
+        const img = new Image();
+        img.onload = function() {
+            // Resize to max 256x256 for crisp display at larger sizes
+            const maxSize = 256;
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > maxSize || height > maxSize) {
+                if (width > height) {
+                    height = Math.round((height * maxSize) / width);
+                    width = maxSize;
+                } else {
+                    width = Math.round((width * maxSize) / height);
+                    height = maxSize;
+                }
+            }
+            
+            // Create canvas and resize
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Convert to smaller data URL (JPEG for photos, PNG for transparency)
+            const resizedDataUrl = canvas.toDataURL('image/png');
+            
+            // Save to localStorage
+            try {
+                setStoredValue(STORAGE_KEYS.LOGO_IMAGE, resizedDataUrl);
+                
+                // Update previews
+                updateLogoPreview(resizedDataUrl);
+                
+                // Update header logo
+                const headerLogoContainer = document.getElementById('header-logo-container');
+                const headerLogo = document.getElementById('header-logo');
+                headerLogo.src = resizedDataUrl;
+                headerLogoContainer.classList.remove('hidden');
+            } catch (e) {
+                alert('Failed to save logo. The image may be too large.');
+                console.error('Logo save error:', e);
+            }
+        };
+        img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+    
+    // Clear the input so the same file can be uploaded again
+    event.target.value = '';
+}
+
+/**
+ * Removes the saved logo from localStorage and updates the UI.
+ */
+function removeLogo() {
+    removeStoredValue(STORAGE_KEYS.LOGO_IMAGE);
+    
+    // Update settings preview
+    updateLogoPreview(null);
+    
+    // Hide header logo
+    const headerLogoContainer = document.getElementById('header-logo-container');
+    headerLogoContainer.classList.add('hidden');
+}
+
+// ============================================================================
+// SECTION 4: UNIFIED SETTINGS MODAL
+// ============================================================================
+
+/**
+ * Current active tab in settings modal
+ */
+let currentSettingsTab = 'api';
+
+/**
+ * Opens the unified settings modal and populates with saved data.
+ * @param {string} tab - Optional tab to open (api, colors, logo)
+ */
+function openSettingsModal(tab = 'api') {
+    const modal = document.getElementById('settings-modal');
     const apiKeyInput = document.getElementById('api-key-input');
     const baseIdInput = document.getElementById('base-id-input');
     const tableIdInput = document.getElementById('table-id-input');
     
-    // Pre-fill with saved values if available
+    // Pre-fill API fields with saved values if available
     apiKeyInput.value = getStoredValue(STORAGE_KEYS.API_KEY) || '';
     baseIdInput.value = getStoredValue(STORAGE_KEYS.BASE_ID) || '';
     tableIdInput.value = getStoredValue(STORAGE_KEYS.TABLE_ID) || '';
     
+    // Load logo preview
+    const savedLogo = getStoredValue(STORAGE_KEYS.LOGO_IMAGE);
+    updateLogoPreview(savedLogo);
+    
+    // Initialize brand colors
+    initBrandColorsTab();
+    
+    // Switch to requested tab
+    switchSettingsTab(tab);
+    
     modal.classList.remove('hidden');
-    apiKeyInput.focus();
+    
+    // Focus appropriate field based on tab
+    if (tab === 'api') {
+        apiKeyInput.focus();
+    }
 }
 
 /**
- * Closes the API configuration modal.
+ * Switches between settings tabs.
+ * @param {string} tabName - Tab to switch to (api, colors, logo, fields)
+ */
+function switchSettingsTab(tabName) {
+    currentSettingsTab = tabName;
+    
+    // Update tab button styles
+    const tabs = ['api', 'colors', 'logo', 'fields'];
+    tabs.forEach(t => {
+        const tabBtn = document.getElementById(`tab-${t}`);
+        const panel = document.getElementById(`panel-${t}`);
+        
+        if (t === tabName) {
+            tabBtn.classList.add('border-blue-600', 'text-blue-600');
+            tabBtn.classList.remove('border-transparent', 'text-gray-500');
+            panel.classList.remove('hidden');
+        } else {
+            tabBtn.classList.remove('border-blue-600', 'text-blue-600');
+            tabBtn.classList.add('border-transparent', 'text-gray-500');
+            panel.classList.add('hidden');
+        }
+    });
+    
+    // Initialize field labels tab if selected
+    if (tabName === 'fields') {
+        initFieldLabelsTab();
+    }
+}
+
+// ============================================================================
+// SECTION 4B: FIELD LABELS MANAGEMENT
+// ============================================================================
+
+/**
+ * Default field labels for the dashboard.
+ * These are used when no custom labels are saved.
+ */
+const DEFAULT_FIELD_LABELS = {
+    field1: 'College',
+    field2: 'School',
+    field3: 'Purpose'
+};
+
+/**
+ * Gets the current field labels from localStorage or returns defaults.
+ * @returns {Object} Current field labels
+ */
+function getFieldLabels() {
+    const saved = getStoredValue(STORAGE_KEYS.FIELD_LABELS);
+    if (saved) {
+        try {
+            return JSON.parse(saved);
+        } catch (e) {
+            console.warn('Failed to parse saved field labels:', e);
+        }
+    }
+    return { ...DEFAULT_FIELD_LABELS };
+}
+
+/**
+ * Initializes the field labels tab with current values.
+ */
+function initFieldLabelsTab() {
+    const labels = getFieldLabels();
+    document.getElementById('field1-label').value = labels.field1 || DEFAULT_FIELD_LABELS.field1;
+    document.getElementById('field2-label').value = labels.field2 || DEFAULT_FIELD_LABELS.field2;
+    document.getElementById('field3-label').value = labels.field3 || DEFAULT_FIELD_LABELS.field3;
+}
+
+/**
+ * Saves field labels to localStorage and updates the dashboard.
+ * @param {Event} event - Form submit event
+ */
+function saveFieldLabels(event) {
+    event.preventDefault();
+    
+    const labels = {
+        field1: document.getElementById('field1-label').value.trim() || DEFAULT_FIELD_LABELS.field1,
+        field2: document.getElementById('field2-label').value.trim() || DEFAULT_FIELD_LABELS.field2,
+        field3: document.getElementById('field3-label').value.trim() || DEFAULT_FIELD_LABELS.field3
+    };
+    
+    setStoredValue(STORAGE_KEYS.FIELD_LABELS, JSON.stringify(labels));
+    
+    // Update all UI labels
+    applyFieldLabels();
+    
+    closeSettingsModal();
+}
+
+/**
+ * Resets field labels to defaults.
+ */
+function resetFieldLabels() {
+    if (confirm('Reset all field labels to defaults (College, School, Purpose)?')) {
+        removeStoredValue(STORAGE_KEYS.FIELD_LABELS);
+        initFieldLabelsTab();
+        applyFieldLabels();
+    }
+}
+
+/**
+ * Applies current field labels to all UI elements.
+ * This updates filter labels, table headers, chart titles, and placeholders.
+ */
+function applyFieldLabels() {
+    const labels = getFieldLabels();
+    
+    // Update College (Field 1) filter label and placeholder
+    const collegeLabel = document.querySelector('label[for="filter-college-search"]');
+    if (collegeLabel) collegeLabel.textContent = labels.field1;
+    const collegeSearch = document.getElementById('filter-college-search');
+    if (collegeSearch) collegeSearch.placeholder = `Search ${labels.field1.toLowerCase()}...`;
+    
+    // Update School (Field 2) filter label and placeholder
+    const schoolLabel = document.querySelector('label[for="filter-school-search"]');
+    if (schoolLabel) schoolLabel.textContent = labels.field2;
+    const schoolSearch = document.getElementById('filter-school-search');
+    if (schoolSearch) schoolSearch.placeholder = `Search ${labels.field2.toLowerCase()}...`;
+    
+    // Update Purpose (Field 3) filter label, placeholder, and table header
+    const purposeLabel = document.querySelector('label[for="filter-purpose-search"]');
+    if (purposeLabel) purposeLabel.textContent = labels.field3;
+    const purposeSearch = document.getElementById('filter-purpose-search');
+    if (purposeSearch) purposeSearch.placeholder = `Search ${labels.field3.toLowerCase()}...`;
+    
+    // Update table header for Purpose column (2nd column)
+    const tableHeaders = document.querySelectorAll('#funds-table thead th');
+    if (tableHeaders.length >= 2) {
+        tableHeaders[1].textContent = labels.field3;
+    }
+    
+    // Update MULTI_SELECT_CONFIG placeholders dynamically
+    if (typeof MULTI_SELECT_CONFIG !== 'undefined') {
+        if (MULTI_SELECT_CONFIG.college) {
+            MULTI_SELECT_CONFIG.college.placeholder = `Search ${labels.field1.toLowerCase()}...`;
+        }
+        if (MULTI_SELECT_CONFIG.school) {
+            MULTI_SELECT_CONFIG.school.placeholder = `Search ${labels.field2.toLowerCase()}...`;
+        }
+        if (MULTI_SELECT_CONFIG.purpose) {
+            MULTI_SELECT_CONFIG.purpose.placeholder = `Search ${labels.field3.toLowerCase()}...`;
+        }
+    }
+}
+
+/**
+ * Initializes brand colors tab with current values.
+ */
+function initBrandColorsTab() {
+    const currentColors = getBrandColors();
+    
+    // Populate each color input field
+    COLOR_FIELD_MAPPINGS.forEach(({ id, key }) => {
+        const colorPicker = document.getElementById(`color-${id}`);
+        const hexInput = document.getElementById(`color-${id}-hex`);
+        
+        if (colorPicker && hexInput) {
+            colorPicker.value = currentColors[key];
+            hexInput.value = currentColors[key];
+            
+            // Remove old listeners to prevent duplicates
+            const newColorPicker = colorPicker.cloneNode(true);
+            colorPicker.parentNode.replaceChild(newColorPicker, colorPicker);
+            
+            const newHexInput = hexInput.cloneNode(true);
+            hexInput.parentNode.replaceChild(newHexInput, hexInput);
+            
+            // Set up two-way sync between color picker and hex input
+            document.getElementById(`color-${id}`).addEventListener('input', (e) => {
+                document.getElementById(`color-${id}-hex`).value = e.target.value;
+                updateColorPreview();
+            });
+            
+            document.getElementById(`color-${id}-hex`).addEventListener('input', (e) => {
+                if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+                    document.getElementById(`color-${id}`).value = e.target.value;
+                    updateColorPreview();
+                }
+            });
+        }
+    });
+    
+    updateColorPreview();
+}
+
+/**
+ * Closes the unified settings modal.
+ */
+function closeSettingsModal() {
+    document.getElementById('settings-modal').classList.add('hidden');
+}
+
+/**
+ * Legacy function - redirects to unified modal
+ */
+function openConfigModal() {
+    openSettingsModal('api');
+}
+
+/**
+ * Legacy function - redirects to unified modal close
  */
 function closeConfigModal() {
-    document.getElementById('api-config-modal').classList.add('hidden');
+    closeSettingsModal();
 }
 
 // ============================================================================
@@ -1699,46 +2491,17 @@ const COLOR_FIELD_MAPPINGS = [
 ];
 
 /**
- * Opens the brand colors configuration modal.
- * Populates fields with current saved colors or defaults.
+ * Legacy function - redirects to unified modal with colors tab
  */
 function openBrandColorsModal() {
-    const modal = document.getElementById('brand-colors-modal');
-    const currentColors = getBrandColors();
-    
-    // Populate each color input field
-    COLOR_FIELD_MAPPINGS.forEach(({ id, key }) => {
-        const colorPicker = document.getElementById(`color-${id}`);
-        const hexInput = document.getElementById(`color-${id}-hex`);
-        
-        if (colorPicker && hexInput) {
-            colorPicker.value = currentColors[key];
-            hexInput.value = currentColors[key];
-            
-            // Set up two-way sync between color picker and hex input
-            colorPicker.addEventListener('input', () => {
-                hexInput.value = colorPicker.value;
-                updateColorPreview();
-            });
-            
-            hexInput.addEventListener('input', () => {
-                if (/^#[0-9A-Fa-f]{6}$/.test(hexInput.value)) {
-                    colorPicker.value = hexInput.value;
-                    updateColorPreview();
-                }
-            });
-        }
-    });
-    
-    updateColorPreview();
-    modal.classList.remove('hidden');
+    openSettingsModal('colors');
 }
 
 /**
- * Closes the brand colors configuration modal.
+ * Legacy function - redirects to unified modal close
  */
 function closeBrandColorsModal() {
-    document.getElementById('brand-colors-modal').classList.add('hidden');
+    closeSettingsModal();
 }
 
 /**
@@ -1776,7 +2539,10 @@ function saveBrandColors(event) {
     // Save to localStorage
     setStoredValue(STORAGE_KEYS.BRAND_COLORS, JSON.stringify(colors));
     
-    closeBrandColorsModal();
+    closeSettingsModal();
+    
+    // Update export button color
+    updateExportButtonColor();
     
     // Refresh charts and metrics with new colors
     if (globalData.length > 0) {
@@ -1787,6 +2553,17 @@ function saveBrandColors(event) {
     
     // Show confirmation
     showToast('Brand colors saved successfully!');
+}
+
+/**
+ * Updates the Export button background color to match the secondary brand color.
+ */
+function updateExportButtonColor() {
+    const exportBtn = document.getElementById('export-btn');
+    if (exportBtn) {
+        const brandColors = getBrandColors();
+        exportBtn.style.backgroundColor = brandColors.secondary;
+    }
 }
 
 /**
@@ -1842,33 +2619,19 @@ function showToast(message) {
 // ============================================================================
 
 /**
- * Updates the data source status badge in the header.
+ * Updates the connection status UI elements.
  * 
  * @param {boolean} isLive - Whether connected to live Airtable data
  * @param {string} message - Optional message for error states
  */
-function setSourceStatus(isLive, message) {
-    const badge = document.getElementById('source-badge');
-    
+function updateConnectionStatus(isLive, message) {
     if (isLive) {
-        badge.className = 'status-badge status-badge-success';
-        badge.innerHTML = `
-            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse" aria-hidden="true"></span> 
-            Airtable (Live)
-        `;
-        
         // Update last updated timestamp
         const lastUpdated = document.getElementById('last-updated');
         if (lastUpdated) {
             lastUpdated.textContent = new Date().toLocaleString();
         }
     } else {
-        badge.className = 'status-badge status-badge-warning';
-        badge.innerHTML = `
-            <span class="w-2 h-2 rounded-full bg-yellow-500" aria-hidden="true"></span> 
-            Not Connected
-        `;
-        
         // Show warning message
         document.getElementById('warning-message').classList.remove('hidden');
         document.getElementById('warning-text').textContent = 
@@ -1989,6 +2752,9 @@ function initDashboard(rawData) {
     }
     
     globalData = rawData;
+    
+    // 0. Apply custom field labels from localStorage
+    applyFieldLabels();
 
     // 1. Extract and sort unique dates (most recent first)
     const uniqueDates = [...new Set(rawData.map(d => d[FIELD_NAMES.date]))]
@@ -2000,11 +2766,10 @@ function initDashboard(rawData) {
         return;
     }
 
-    // 2. Populate date filter dropdown
-    const dateSelect = document.getElementById('date-filter');
-    dateSelect.innerHTML = uniqueDates
-        .map(d => `<option value="${d}">${d}</option>`)
-        .join('');
+    // 2. Store dates globally and populate styled date dropdown
+    window.datesList = uniqueDates;
+    updateStyledDropdown('date', uniqueDates, uniqueDates[0]);
+    document.getElementById('date-filter').value = uniqueDates[0];
 
     // 3. Populate filter panel dropdowns with unique values
     populateFilterOptions(rawData);
@@ -2019,12 +2784,7 @@ function initDashboard(rawData) {
     // 6. Initial render with most recent date (triggers applyFilters)
     updateDateSpecificViews(uniqueDates[0]);
 
-    // 7. Set up date filter event listener
-    dateSelect.addEventListener('change', (e) => {
-        updateDateSpecificViews(e.target.value);
-    });
-
-    // 8. Show dashboard content
+    // 7. Show dashboard content
     hideLoading();
 }
 
@@ -2106,6 +2866,18 @@ function renderMetrics(data) {
         parseCurrency(item[FIELD_NAMES.income]) + 
         parseCurrency(item[FIELD_NAMES.investmentFees]), 0);
     const returnPercent = beginningMV === 0 ? 0 : (netInvestmentReturn / beginningMV) * 100;
+    
+    // Calculate prior period fund count for comparison
+    const selectedDate = document.getElementById('date-filter')?.value;
+    const allDates = [...new Set(globalData.map(d => d[FIELD_NAMES.date]))]
+        .filter(Boolean)
+        .sort((a, b) => new Date(b) - new Date(a)); // Most recent first
+    const currentDateIndex = allDates.indexOf(selectedDate);
+    const priorDate = currentDateIndex < allDates.length - 1 ? allDates[currentDateIndex + 1] : null;
+    const priorPeriodFunds = priorDate 
+        ? globalData.filter(d => d[FIELD_NAMES.date] === priorDate).length 
+        : totalFunds;
+    const fundCountChange = totalFunds - priorPeriodFunds;
 
     // Helper function to format change indicator
     function formatChange(value, isPercent = true) {
@@ -2141,13 +2913,24 @@ function renderMetrics(data) {
             </div>
         </div>
         
-        <!-- Net Investment Return Card -->
+        <!-- Net Investment Return Card (hidden for now)
         <div class="card py-3 px-4 border-l-4" style="border-left-color: ${netInvestmentReturn >= 0 ? brandColors.positive : brandColors.negative}">
             <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Net Investment Return</p>
             <p class="text-lg font-bold text-gray-900 mt-1 tabular-nums">${formatCurrency(netInvestmentReturn)}</p>
             <div class="flex items-center gap-2 mt-1 text-xs">
                 ${formatChange(returnPercent)}
                 <span class="text-gray-400">return on beginning MV</span>
+            </div>
+        </div>
+        -->
+        
+        <!-- Total Funds Card -->
+        <div class="card py-3 px-4 border-l-4" style="border-left-color: ${brandColors.primary}">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total Funds</p>
+            <p class="text-lg font-bold text-gray-900 mt-1">${totalFunds.toLocaleString()}</p>
+            <div class="flex items-center gap-2 mt-1 text-xs">
+                ${fundCountChange !== 0 ? `<span style="color: ${fundCountChange >= 0 ? brandColors.positive : brandColors.negative}" class="font-semibold">${fundCountChange >= 0 ? '▲' : '▼'} ${fundCountChange >= 0 ? '+' : ''}${fundCountChange}</span>` : '<span class="font-semibold text-gray-500">—</span>'}
+                <span class="text-gray-400">vs prior period</span>
             </div>
         </div>
         
@@ -2174,8 +2957,9 @@ function renderMetrics(data) {
  * This chart shows historical data across all periods.
  * 
  * @param {Array} data - Full dataset (all periods)
+ * @param {string} selectedDate - The currently selected date (end of period range)
  */
-function renderTrendChart(data) {
+function renderTrendChart(data, selectedDate = null) {
     // Aggregate ending market value by date
     const mvByDate = data.reduce((acc, curr) => {
         const date = curr[FIELD_NAMES.date];
@@ -2195,7 +2979,19 @@ function renderTrendChart(data) {
     }, {});
     
     // Sort dates chronologically
-    const sortedDates = Object.keys(mvByDate).sort((a, b) => new Date(a) - new Date(b));
+    const allSortedDates = Object.keys(mvByDate).sort((a, b) => new Date(a) - new Date(b));
+    
+    // Find the index of the selected date and show 12 periods ending with it
+    let sortedDates;
+    if (selectedDate && allSortedDates.includes(selectedDate)) {
+        const endIndex = allSortedDates.indexOf(selectedDate) + 1; // +1 to include the selected date
+        const startIndex = Math.max(0, endIndex - 12); // Go back 12 periods (or to beginning)
+        sortedDates = allSortedDates.slice(startIndex, endIndex);
+    } else {
+        // Fallback: show last 12 periods
+        sortedDates = allSortedDates.slice(-12);
+    }
+    
     const mvValues = sortedDates.map(d => mvByDate[d]);
     const hgValues = sortedDates.map(d => hgByDate[d] || 0);
     const dateLabels = sortedDates.map(formatDateLabel);
@@ -2255,7 +3051,12 @@ function renderTrendChart(data) {
             plugins: { 
                 legend: { 
                     display: true, 
-                    position: 'bottom' 
+                    position: 'bottom',
+                    labels: {
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
                 },
                 tooltip: {
                     callbacks: {
@@ -2267,7 +3068,17 @@ function renderTrendChart(data) {
                 y: { 
                     beginAtZero: true, 
                     ticks: { 
-                        callback: (val) => '$' + (val / 1000000).toFixed(0) + 'M'
+                        callback: (val) => '$' + (val / 1000000).toFixed(0) + 'M',
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
+                },
+                x: {
+                    ticks: {
+                        font: {
+                            weight: 'bold'
+                        }
                     }
                 }
             }
@@ -2319,7 +3130,27 @@ function renderClassificationChart(data) {
                     position: 'right',
                     labels: {
                         padding: 15,
-                        usePointStyle: true
+                        usePointStyle: true,
+                        font: {
+                            weight: 'bold'
+                        },
+                        generateLabels: function(chart) {
+                            const data = chart.data;
+                            const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+                            return data.labels.map((label, i) => {
+                                const value = data.datasets[0].data[i];
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return {
+                                    text: `${label} (${percentage}%)`,
+                                    fillStyle: data.datasets[0].backgroundColor[i],
+                                    strokeStyle: data.datasets[0].backgroundColor[i],
+                                    lineWidth: 0,
+                                    hidden: false,
+                                    index: i,
+                                    pointStyle: 'circle'
+                                };
+                            });
+                        }
                     }
                 },
                 tooltip: {
@@ -2350,70 +3181,115 @@ function renderPurposeChart(data) {
         charts['purpose'].destroy();
     }
 
-    // Aggregate by purpose - track both market value and fund count
+    // Aggregate by purpose - track market value, historical gift, and fund count
     const purposeData = data.reduce((acc, curr) => {
         const purpose = curr[FIELD_NAMES.purpose] || 'Other';
         const mv = parseCurrency(curr[FIELD_NAMES.endingMV]);
+        const hg = parseCurrency(curr[FIELD_NAMES.endingHistoricalGift]);
         if (!acc[purpose]) {
-            acc[purpose] = { mv: 0, count: 0 };
+            acc[purpose] = { mv: 0, hg: 0, count: 0 };
         }
         acc[purpose].mv += mv;
+        acc[purpose].hg += hg;
         acc[purpose].count += 1;
         return acc;
     }, {});
 
-    // Sort by value descending
+    // Sort by total value (mv + hg) descending
     const sortedEntries = Object.entries(purposeData)
-        .sort(([, a], [, b]) => b.mv - a.mv);
+        .sort(([, a], [, b]) => (b.mv + b.hg) - (a.mv + a.hg));
     
     const sortedLabels = sortedEntries.map(([label]) => label);
-    const sortedValues = sortedEntries.map(([, data]) => data.mv);
+    const sortedMV = sortedEntries.map(([, data]) => data.mv);
+    const sortedHG = sortedEntries.map(([, data]) => data.hg);
     const sortedCounts = sortedEntries.map(([, data]) => data.count);
 
-    // Get current brand colors (only 4 colors)
+    // Get current brand colors
     const brandColors = getBrandColors();
     
     charts['purpose'] = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: sortedLabels,
-            datasets: [{
-                label: 'Market Value',
-                data: sortedValues,
-                backgroundColor: brandColors.secondary,
-                borderRadius: 4,
-                borderSkipped: false,
-                fundCounts: sortedCounts  // Store counts for tooltip access
-            }]
+            datasets: [
+                {
+                    label: 'Market Value',
+                    data: sortedMV,
+                    backgroundColor: brandColors.secondary,
+                    borderRadius: 4,
+                    borderSkipped: false,
+                    fundCounts: sortedCounts,
+                    barPercentage: 0.9,
+                    categoryPercentage: 0.8,
+                    order: 2
+                },
+                {
+                    label: 'Historical Gift',
+                    data: sortedHG,
+                    backgroundColor: brandColors.primary,
+                    borderRadius: 4,
+                    borderSkipped: false,
+                    fundCounts: sortedCounts,
+                    barPercentage: 0.5,
+                    categoryPercentage: 0.8,
+                    order: 1
+                }
+            ]
         },
         options: {
+            indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
             plugins: { 
-                legend: { display: false },
+                legend: { 
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
+                },
                 tooltip: {
+                    mode: 'index',
                     callbacks: {
+                        afterTitle: (context) => {
+                            const idx = context[0].dataIndex;
+                            const count = context[0].dataset.fundCounts[idx];
+                            return `${count} fund${count !== 1 ? 's' : ''}`;
+                        },
                         label: (context) => {
+                            const label = context.dataset.label;
                             const value = formatCurrency(context.raw);
-                            const count = context.dataset.fundCounts[context.dataIndex];
-                            return [
-                                `Market Value: ${value}`,
-                                `Fund Count: ${count} fund${count !== 1 ? 's' : ''}`
-                            ];
+                            return ` ${label}: ${value}`;
+                        },
+                        labelColor: (context) => {
+                            return {
+                                borderColor: context.dataset.backgroundColor,
+                                backgroundColor: context.dataset.backgroundColor,
+                                borderWidth: 2,
+                                borderRadius: 2
+                            };
                         }
                     }
                 }
             },
             scales: {
-                y: { 
+                x: { 
+                    stacked: false,
                     ticks: { 
-                        callback: (val) => '$' + (val / 1000000).toFixed(1) + 'M' 
+                        callback: (val) => '$' + (val / 1000000).toFixed(1) + 'M',
+                        font: {
+                            weight: 'bold'
+                        }
                     }
                 },
-                x: {
+                y: {
+                    stacked: true,
                     ticks: {
-                        maxRotation: 45,
-                        minRotation: 0
+                        font: {
+                            weight: 'bold'
+                        }
                     }
                 }
             }
@@ -2422,7 +3298,137 @@ function renderPurposeChart(data) {
 }
 
 /**
- * Renders the Market Value Rollforward financial summary.
+ * Renders the College stacked bar chart.
+ * Shows Market Value and Historical Gift totals by College.
+ * 
+ * @param {Array} data - Filtered fund data for current period
+ */
+function renderCollegeChart(data) {
+    const ctx = document.getElementById('collegeChart');
+    
+    // Destroy existing chart if present
+    if (charts['college']) {
+        charts['college'].destroy();
+    }
+
+    // Aggregate by college - track market value, historical gift, and fund count
+    const collegeData = data.reduce((acc, curr) => {
+        const college = curr[FIELD_NAMES.college] || 'Other';
+        const mv = parseCurrency(curr[FIELD_NAMES.endingMV]);
+        const hg = parseCurrency(curr[FIELD_NAMES.endingHistoricalGift]);
+        if (!acc[college]) {
+            acc[college] = { mv: 0, hg: 0, count: 0 };
+        }
+        acc[college].mv += mv;
+        acc[college].hg += hg;
+        acc[college].count += 1;
+        return acc;
+    }, {});
+
+    // Sort by total value (mv + hg) descending
+    const sortedEntries = Object.entries(collegeData)
+        .sort(([, a], [, b]) => (b.mv + b.hg) - (a.mv + a.hg));
+    
+    const sortedLabels = sortedEntries.map(([label]) => label);
+    const sortedMV = sortedEntries.map(([, data]) => data.mv);
+    const sortedHG = sortedEntries.map(([, data]) => data.hg);
+    const sortedCounts = sortedEntries.map(([, data]) => data.count);
+
+    // Get current brand colors
+    const brandColors = getBrandColors();
+    
+    charts['college'] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: sortedLabels,
+            datasets: [
+                {
+                    label: 'Market Value',
+                    data: sortedMV,
+                    backgroundColor: brandColors.secondary,
+                    borderRadius: 4,
+                    borderSkipped: false,
+                    fundCounts: sortedCounts,
+                    barPercentage: 0.9,
+                    categoryPercentage: 0.8,
+                    order: 2
+                },
+                {
+                    label: 'Historical Gift',
+                    data: sortedHG,
+                    backgroundColor: brandColors.primary,
+                    borderRadius: 4,
+                    borderSkipped: false,
+                    fundCounts: sortedCounts,
+                    barPercentage: 0.5,
+                    categoryPercentage: 0.8,
+                    order: 1
+                }
+            ]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { 
+                legend: { 
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
+                },
+                tooltip: {
+                    mode: 'index',
+                    callbacks: {
+                        afterTitle: (context) => {
+                            const idx = context[0].dataIndex;
+                            const count = context[0].dataset.fundCounts[idx];
+                            return `${count} fund${count !== 1 ? 's' : ''}`;
+                        },
+                        label: (context) => {
+                            const label = context.dataset.label;
+                            const value = formatCurrency(context.raw);
+                            return ` ${label}: ${value}`;
+                        },
+                        labelColor: (context) => {
+                            return {
+                                borderColor: context.dataset.backgroundColor,
+                                backgroundColor: context.dataset.backgroundColor,
+                                borderWidth: 2,
+                                borderRadius: 2
+                            };
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { 
+                    stacked: false,
+                    ticks: { 
+                        callback: (val) => '$' + (val / 1000000).toFixed(1) + 'M',
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
+                },
+                y: {
+                    stacked: true,
+                    ticks: {
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+/**
+ * Renders the Net Asset Summary financial summary.
  * Shows a structured income statement style view of the period activity.
  * Displays three columns: Without Donor Restriction, With Donor Restriction, and Total.
  * Filters records by the 'Net Asset Classification' column to determine which column they belong to.
@@ -2625,11 +3631,11 @@ function populateFilterOptions(data) {
         .filter(Boolean).sort();
     
     // Get unique colleges
-    const operatingUnits = [...new Set(data.map(d => d[FIELD_NAMES.operatingUnit] || ''))]
+    const colleges = [...new Set(data.map(d => d[FIELD_NAMES.college] || ''))]
         .filter(Boolean).sort();
     
     // Get unique schools
-    const reportingUnits = [...new Set(data.map(d => d[FIELD_NAMES.reportingUnit] || ''))]
+    const schools = [...new Set(data.map(d => d[FIELD_NAMES.school] || ''))]
         .filter(Boolean).sort();
     
     // Get unique purposes
@@ -2640,36 +3646,29 @@ function populateFilterOptions(data) {
     const netAssetClassifications = [...new Set(data.map(d => d[FIELD_NAMES.netAssetClassification] || ''))]
         .filter(Boolean).sort();
     
-    // Store funds globally for search functionality
+    // Store data globally for multi-select search functionality
     window.fundsList = funds;
+    window.collegesList = colleges;
+    window.schoolsList = schools;
+    window.purposesList = purposes;
+    window.nacList = netAssetClassifications;
+    window.fundTypesList = fundTypes;
     
-    // Initialize fund dropdown (will be populated on search/focus)
-    updateFundDropdown('');
+    // Initialize selected values as empty arrays
+    window.selectedFunds = [];
+    window.selectedColleges = [];
+    window.selectedSchools = [];
+    window.selectedPurposes = [];
     
-    // Populate College dropdown
-    const operatingUnitSelect = document.getElementById('filter-operating-unit');
-    operatingUnitSelect.innerHTML = '<option value="">All Colleges</option>' + 
-        operatingUnits.map(o => `<option value="${o}">${o}</option>`).join('');
+    // Initialize all multi-select dropdowns
+    updateMultiSelectDropdown('fund', '');
+    updateMultiSelectDropdown('college', '');
+    updateMultiSelectDropdown('school', '');
+    updateMultiSelectDropdown('purpose', '');
     
-    // Populate School dropdown
-    const reportingUnitSelect = document.getElementById('filter-reporting-unit');
-    reportingUnitSelect.innerHTML = '<option value="">All Schools</option>' + 
-        reportingUnits.map(r => `<option value="${r}">${r}</option>`).join('');
-    
-    // Populate Net Asset Classification dropdown
-    const nacSelect = document.getElementById('filter-nac');
-    nacSelect.innerHTML = '<option value="">All Classifications</option>' + 
-        netAssetClassifications.map(n => `<option value="${n}">${n}</option>`).join('');
-    
-    // Populate Fund Type dropdown
-    const typeSelect = document.getElementById('filter-fund-type');
-    typeSelect.innerHTML = '<option value="">All Types</option>' + 
-        fundTypes.map(t => `<option value="${t}">${t}</option>`).join('');
-    
-    // Populate Purpose dropdown
-    const purposeSelect = document.getElementById('filter-purpose');
-    purposeSelect.innerHTML = '<option value="">All Purposes</option>' + 
-        purposes.map(p => `<option value="${p}">${p}</option>`).join('');
+    // Populate styled single-select dropdowns (NAC and Fund Type)
+    updateStyledDropdown('nac', ['All Classifications', ...netAssetClassifications], '');
+    updateStyledDropdown('fundtype', ['All Types', ...fundTypes], '');
     
     // Update total count
     document.getElementById('total-count').textContent = data.length;
@@ -2682,13 +3681,15 @@ function populateFilterOptions(data) {
 function applyFilters() {
     const selectedDate = document.getElementById('date-filter').value;
     
-    // Get filter values
-    const fundFilter = document.getElementById('filter-fund').value;
-    const operatingUnitFilter = document.getElementById('filter-operating-unit').value;
-    const reportingUnitFilter = document.getElementById('filter-reporting-unit').value;
+    // Get multi-select filter values (arrays)
+    const fundFilters = window.selectedFunds || [];
+    const collegeFilters = window.selectedColleges || [];
+    const schoolFilters = window.selectedSchools || [];
+    const purposeFilters = window.selectedPurposes || [];
+    
+    // Get single-select filter values
     const nacFilter = document.getElementById('filter-nac').value;
     const fundTypeFilter = document.getElementById('filter-fund-type').value;
-    const purposeFilter = document.getElementById('filter-purpose').value;
     const mvMin = parseFloat(document.getElementById('filter-mv-min').value) || null;
     const mvMax = parseFloat(document.getElementById('filter-mv-max').value) || null;
     const underwaterOnly = document.getElementById('filter-underwater').checked;
@@ -2697,19 +3698,24 @@ function applyFilters() {
     function applyNonDateFilters(data) {
         let result = [...data];
         
-        // Apply Fund ID filter
-        if (fundFilter) {
-            result = result.filter(d => String(d[FIELD_NAMES.fundId]) === fundFilter);
+        // Apply Fund ID filter (multi-select)
+        if (fundFilters.length > 0) {
+            result = result.filter(d => fundFilters.includes(String(d[FIELD_NAMES.fundId])));
         }
         
-        // Apply College filter
-        if (operatingUnitFilter) {
-            result = result.filter(d => d[FIELD_NAMES.operatingUnit] === operatingUnitFilter);
+        // Apply College filter (multi-select)
+        if (collegeFilters.length > 0) {
+            result = result.filter(d => collegeFilters.includes(d[FIELD_NAMES.college]));
         }
         
-        // Apply School filter
-        if (reportingUnitFilter) {
-            result = result.filter(d => d[FIELD_NAMES.reportingUnit] === reportingUnitFilter);
+        // Apply School filter (multi-select)
+        if (schoolFilters.length > 0) {
+            result = result.filter(d => schoolFilters.includes(d[FIELD_NAMES.school]));
+        }
+        
+        // Apply Purpose filter (multi-select)
+        if (purposeFilters.length > 0) {
+            result = result.filter(d => purposeFilters.includes(d[FIELD_NAMES.purpose]));
         }
         
         // Apply Net Asset Classification filter
@@ -2720,11 +3726,6 @@ function applyFilters() {
         // Apply Fund Type filter
         if (fundTypeFilter) {
             result = result.filter(d => d[FIELD_NAMES.fundType] === fundTypeFilter);
-        }
-        
-        // Apply Purpose filter
-        if (purposeFilter) {
-            result = result.filter(d => d[FIELD_NAMES.purpose] === purposeFilter);
         }
         
         // Apply Ending MV range filter
@@ -2752,13 +3753,14 @@ function applyFilters() {
     // Filter ALL historical data for trend chart (same filters, all dates)
     const filteredAllDates = applyNonDateFilters(globalData);
     
-    // Update trend chart with filtered historical data
-    renderTrendChart(filteredAllDates);
+    // Update trend chart with filtered historical data, ending at selected date
+    renderTrendChart(filteredAllDates, selectedDate);
     
     // Update other charts with filtered data for selected period
     renderMetrics(filtered);
     renderClassificationChart(filtered);
     renderPurposeChart(filtered);
+    renderCollegeChart(filtered);
     renderRollforwardSummary(filtered);
     
     // Store filtered data for table (before search)
@@ -2777,138 +3779,558 @@ function applyFilters() {
     updateActiveFiltersDisplay();
 }
 
+// ============================================================================
+// SECTION 9C: MULTI-SELECT FILTER FUNCTIONS
+// ============================================================================
+
 /**
- * Handles fund search input - matches user input to fund list and applies filter.
+ * Configuration for multi-select filters
+ */
+const MULTI_SELECT_CONFIG = {
+    fund: {
+        listKey: 'fundsList',
+        selectedKey: 'selectedFunds',
+        searchId: 'filter-fund-search',
+        dropdownId: 'fund-dropdown',
+        hiddenId: 'filter-fund',
+        clearBtnId: 'clear-fund-search',
+        tagsId: 'fund-selected-tags',
+        placeholder: 'Search funds...',
+        isFund: true // Special handling for fund display
+    },
+    college: {
+        listKey: 'collegesList',
+        selectedKey: 'selectedColleges',
+        searchId: 'filter-college-search',
+        dropdownId: 'college-dropdown',
+        hiddenId: 'filter-operating-unit',
+        clearBtnId: 'clear-college-search',
+        tagsId: 'college-selected-tags',
+        placeholder: 'Search colleges...'
+    },
+    school: {
+        listKey: 'schoolsList',
+        selectedKey: 'selectedSchools',
+        searchId: 'filter-school-search',
+        dropdownId: 'school-dropdown',
+        hiddenId: 'filter-reporting-unit',
+        clearBtnId: 'clear-school-search',
+        tagsId: 'school-selected-tags',
+        placeholder: 'Search schools...'
+    },
+    purpose: {
+        listKey: 'purposesList',
+        selectedKey: 'selectedPurposes',
+        searchId: 'filter-purpose-search',
+        dropdownId: 'purpose-dropdown',
+        hiddenId: 'filter-purpose',
+        clearBtnId: 'clear-purpose-search',
+        tagsId: 'purpose-selected-tags',
+        placeholder: 'Search purposes...'
+    }
+};
+
+/**
+ * Handles search input for multi-select filters.
  * 
+ * @param {string} filterType - Type of filter (fund, college, school, purpose)
  * @param {string} value - The search input value
  */
-function handleFundSearchInput(value) {
-    const clearBtn = document.getElementById('clear-fund-search');
+function handleMultiSelectSearch(filterType, value) {
+    const config = MULTI_SELECT_CONFIG[filterType];
+    const clearBtn = document.getElementById(config.clearBtnId);
     
-    // Show/hide clear button
-    if (value) {
+    // Show/hide clear button based on search value or selections
+    const hasSelections = (window[config.selectedKey] || []).length > 0;
+    if (value || hasSelections) {
         clearBtn.classList.remove('hidden');
     } else {
         clearBtn.classList.add('hidden');
     }
     
     // Update dropdown with filtered results
-    updateFundDropdown(value);
-    showFundDropdown();
+    updateMultiSelectDropdown(filterType, value);
+    showMultiSelectDropdown(filterType);
 }
 
 /**
- * Updates the fund dropdown with filtered options.
- * Shows max 10 items with scrolling.
+ * Updates the dropdown with filtered options for multi-select.
  * 
+ * @param {string} filterType - Type of filter
  * @param {string} searchTerm - The search term to filter by
  */
-function updateFundDropdown(searchTerm) {
-    const dropdown = document.getElementById('fund-dropdown');
+function updateMultiSelectDropdown(filterType, searchTerm) {
+    const config = MULTI_SELECT_CONFIG[filterType];
+    const dropdown = document.getElementById(config.dropdownId);
+    const list = window[config.listKey];
+    const selected = window[config.selectedKey] || [];
     
-    if (!window.fundsList) {
-        dropdown.innerHTML = '<div class="px-3 py-2 text-sm text-gray-500">Loading funds...</div>';
+    if (!list) {
+        dropdown.innerHTML = '<div class="px-3 py-2 text-sm text-gray-500">Loading...</div>';
         return;
     }
     
     const term = searchTerm.toLowerCase().trim();
     
-    // Filter funds based on search term
-    let filteredFunds = window.fundsList;
-    if (term) {
-        filteredFunds = window.fundsList.filter(f => 
-            f.display.toLowerCase().includes(term) ||
-            f.id.toLowerCase().includes(term) ||
-            f.name.toLowerCase().includes(term)
-        );
+    // Filter items based on search term
+    let filteredItems;
+    if (config.isFund) {
+        // Fund filter has special object structure
+        filteredItems = list;
+        if (term) {
+            filteredItems = list.filter(f => 
+                f.display.toLowerCase().includes(term) ||
+                f.id.toLowerCase().includes(term) ||
+                f.name.toLowerCase().includes(term)
+            );
+        }
+    } else {
+        // Simple string array for other filters
+        filteredItems = term ? list.filter(item => item.toLowerCase().includes(term)) : list;
     }
     
     // Build dropdown HTML
-    if (filteredFunds.length === 0) {
-        dropdown.innerHTML = '<div class="px-3 py-2 text-sm text-gray-500">No funds found</div>';
+    if (filteredItems.length === 0) {
+        dropdown.innerHTML = '<div class="px-3 py-2 text-sm text-gray-500">No items found</div>';
     } else {
-        // Show "All Funds" option first if no search term
         let html = '';
-        if (!term) {
-            html = `<div class="fund-option px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 border-b border-gray-100" 
-                         data-id="" 
-                         data-display=""
-                         onmousedown="selectFund('', '')">
-                        <span class="text-gray-600">All Funds</span>
-                    </div>`;
-        }
         
-        html += filteredFunds.map(f => `
-            <div class="fund-option px-3 py-2 text-sm cursor-pointer hover:bg-blue-50" 
-                 data-id="${f.id}" 
-                 data-display="${f.display}"
-                 onmousedown="selectFund('${f.id}', '${f.display.replace(/'/g, "\\'")}')">
-                <span class="font-medium text-gray-800">${f.id}</span>
-                <span class="text-gray-600 ml-1">${f.name}</span>
-            </div>
-        `).join('');
+        if (config.isFund) {
+            // Fund items
+            html = filteredItems.map(f => {
+                const isSelected = selected.includes(f.id);
+                return `
+                    <div class="multi-select-option px-3 py-2 text-sm cursor-pointer flex items-center gap-2 ${isSelected ? 'selected' : ''}" 
+                         data-id="${f.id}" 
+                         data-display="${f.display}"
+                         onmousedown="toggleMultiSelectItem('${filterType}', '${f.id}', '${f.display.replace(/'/g, "\\'")}')">
+                        <span class="flex-shrink-0 w-4 h-4 border rounded flex items-center justify-center ${isSelected ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}">
+                            ${isSelected ? '<svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>' : ''}
+                        </span>
+                        <span class="font-medium text-gray-800">${f.id}</span>
+                        <span class="text-gray-600">${f.name}</span>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            // Simple string items
+            html = filteredItems.map(item => {
+                const isSelected = selected.includes(item);
+                const escapedItem = item.replace(/'/g, "\\'");
+                return `
+                    <div class="multi-select-option px-3 py-2 text-sm cursor-pointer flex items-center gap-2 ${isSelected ? 'selected' : ''}" 
+                         data-value="${item}"
+                         onmousedown="toggleMultiSelectItem('${filterType}', '${escapedItem}', '${escapedItem}')">
+                        <span class="flex-shrink-0 w-4 h-4 border rounded flex items-center justify-center ${isSelected ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}">
+                            ${isSelected ? '<svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>' : ''}
+                        </span>
+                        <span class="text-gray-700">${item}</span>
+                    </div>
+                `;
+            }).join('');
+        }
         
         dropdown.innerHTML = html;
     }
 }
 
 /**
- * Shows the fund dropdown.
+ * Shows the multi-select dropdown.
+ * 
+ * @param {string} filterType - Type of filter
  */
-function showFundDropdown() {
-    const dropdown = document.getElementById('fund-dropdown');
+function showMultiSelectDropdown(filterType) {
+    const config = MULTI_SELECT_CONFIG[filterType];
+    const dropdown = document.getElementById(config.dropdownId);
     dropdown.classList.remove('hidden');
 }
 
 /**
- * Hides the fund dropdown after a short delay (allows click events to fire).
+ * Hides the multi-select dropdown after a delay.
+ * 
+ * @param {string} filterType - Type of filter
  */
-function hideFundDropdownDelayed() {
+function hideMultiSelectDropdownDelayed(filterType) {
     setTimeout(() => {
-        const dropdown = document.getElementById('fund-dropdown');
+        const config = MULTI_SELECT_CONFIG[filterType];
+        const dropdown = document.getElementById(config.dropdownId);
         dropdown.classList.add('hidden');
     }, 200);
 }
 
 /**
- * Selects a fund from the dropdown.
+ * Toggles selection of an item in multi-select.
  * 
- * @param {string} id - The fund ID
- * @param {string} display - The display text for the fund
+ * @param {string} filterType - Type of filter
+ * @param {string} id - The item ID/value
+ * @param {string} display - The display text for the item
  */
-function selectFund(id, display) {
-    const searchInput = document.getElementById('filter-fund-search');
-    const hiddenInput = document.getElementById('filter-fund');
-    const clearBtn = document.getElementById('clear-fund-search');
-    const dropdown = document.getElementById('fund-dropdown');
+function toggleMultiSelectItem(filterType, id, display) {
+    const config = MULTI_SELECT_CONFIG[filterType];
+    const selected = window[config.selectedKey] || [];
+    const searchInput = document.getElementById(config.searchId);
     
-    searchInput.value = display;
-    hiddenInput.value = id;
+    const index = selected.indexOf(id);
+    if (index === -1) {
+        // Add to selection
+        selected.push(id);
+    } else {
+        // Remove from selection
+        selected.splice(index, 1);
+    }
     
-    if (display) {
+    window[config.selectedKey] = selected;
+    
+    // Update hidden input with comma-separated values
+    document.getElementById(config.hiddenId).value = selected.join(',');
+    
+    // Clear search input and update dropdown
+    searchInput.value = '';
+    updateMultiSelectDropdown(filterType, '');
+    
+    // Update selected tags display
+    updateSelectedTags(filterType);
+    
+    // Update clear button visibility
+    const clearBtn = document.getElementById(config.clearBtnId);
+    if (selected.length > 0) {
         clearBtn.classList.remove('hidden');
     } else {
         clearBtn.classList.add('hidden');
     }
     
-    dropdown.classList.add('hidden');
+    // Apply filters
     applyFilters();
 }
 
 /**
- * Clears the fund search input and resets the filter.
+ * Removes a single item from multi-select.
+ * 
+ * @param {string} filterType - Type of filter
+ * @param {string} id - The item ID/value to remove
  */
-function clearFundSearch() {
-    const searchInput = document.getElementById('filter-fund-search');
-    const hiddenInput = document.getElementById('filter-fund');
-    const clearBtn = document.getElementById('clear-fund-search');
-    const dropdown = document.getElementById('fund-dropdown');
+function removeMultiSelectItem(filterType, id) {
+    const config = MULTI_SELECT_CONFIG[filterType];
+    const selected = window[config.selectedKey] || [];
     
-    searchInput.value = '';
-    hiddenInput.value = '';
-    clearBtn.classList.add('hidden');
-    dropdown.classList.add('hidden');
+    const index = selected.indexOf(id);
+    if (index !== -1) {
+        selected.splice(index, 1);
+    }
+    
+    window[config.selectedKey] = selected;
+    
+    // Update hidden input
+    document.getElementById(config.hiddenId).value = selected.join(',');
+    
+    // Update display
+    updateSelectedTags(filterType);
+    updateMultiSelectDropdown(filterType, '');
+    
+    // Update clear button visibility
+    const clearBtn = document.getElementById(config.clearBtnId);
+    if (selected.length > 0) {
+        clearBtn.classList.remove('hidden');
+    } else {
+        clearBtn.classList.add('hidden');
+    }
+    
     applyFilters();
+}
+
+/**
+ * Updates the selected tags display for a multi-select filter.
+ * 
+ * @param {string} filterType - Type of filter
+ */
+function updateSelectedTags(filterType) {
+    const config = MULTI_SELECT_CONFIG[filterType];
+    const tagsContainer = document.getElementById(config.tagsId);
+    const selected = window[config.selectedKey] || [];
+    const list = window[config.listKey] || [];
+    
+    if (selected.length === 0) {
+        tagsContainer.innerHTML = '';
+        return;
+    }
+    
+    let html = '';
+    
+    if (config.isFund) {
+        // Fund has special object structure
+        html = selected.map(id => {
+            const fund = list.find(f => f.id === id);
+            const display = fund ? fund.display : id;
+            const shortDisplay = fund ? `${fund.id} - ${fund.name.substring(0, 20)}${fund.name.length > 20 ? '...' : ''}` : id;
+            return `
+                <span class="selected-tag" title="${display}">
+                    <span>${shortDisplay}</span>
+                    <button type="button" onclick="removeMultiSelectItem('${filterType}', '${id}')" aria-label="Remove ${display}">
+                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </span>
+            `;
+        }).join('');
+    } else {
+        // Simple string items
+        html = selected.map(item => {
+            const shortDisplay = item.length > 25 ? item.substring(0, 25) + '...' : item;
+            const escapedItem = item.replace(/'/g, "\\'");
+            return `
+                <span class="selected-tag" title="${item}">
+                    <span>${shortDisplay}</span>
+                    <button type="button" onclick="removeMultiSelectItem('${filterType}', '${escapedItem}')" aria-label="Remove ${item}">
+                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </span>
+            `;
+        }).join('');
+    }
+    
+    tagsContainer.innerHTML = html;
+}
+
+/**
+ * Clears all selections and search for a multi-select filter.
+ * 
+ * @param {string} filterType - Type of filter
+ */
+function clearMultiSelectSearch(filterType) {
+    const config = MULTI_SELECT_CONFIG[filterType];
+    
+    // Clear search input
+    document.getElementById(config.searchId).value = '';
+    
+    // Clear selections
+    window[config.selectedKey] = [];
+    document.getElementById(config.hiddenId).value = '';
+    
+    // Hide clear button
+    document.getElementById(config.clearBtnId).classList.add('hidden');
+    
+    // Clear tags
+    document.getElementById(config.tagsId).innerHTML = '';
+    
+    // Hide dropdown
+    document.getElementById(config.dropdownId).classList.add('hidden');
+    
+    // Update dropdown
+    updateMultiSelectDropdown(filterType, '');
+    
+    applyFilters();
+}
+
+// Legacy function aliases for backward compatibility
+function handleFundSearchInput(value) {
+    handleMultiSelectSearch('fund', value);
+}
+
+function showFundDropdown() {
+    showMultiSelectDropdown('fund');
+}
+
+function hideFundDropdownDelayed() {
+    hideMultiSelectDropdownDelayed('fund');
+}
+
+function selectFund(id, display) {
+    toggleMultiSelectItem('fund', id, display);
+}
+
+function clearFundSearch() {
+    clearMultiSelectSearch('fund');
+}
+
+// Keep old function for compatibility but redirect to new system
+function updateFundDropdown(searchTerm) {
+    updateMultiSelectDropdown('fund', searchTerm);
+}
+
+// ============================================================================
+// SECTION 9D: STYLED SINGLE-SELECT DROPDOWN FUNCTIONS
+// ============================================================================
+
+/**
+ * Configuration for styled single-select dropdowns
+ */
+const STYLED_DROPDOWN_CONFIG = {
+    date: {
+        displayId: 'date-filter-display',
+        textId: 'date-filter-text',
+        dropdownId: 'date-dropdown',
+        hiddenId: 'date-filter',
+        defaultText: 'Select period...',
+        isDate: true
+    },
+    nac: {
+        displayId: 'nac-filter-display',
+        textId: 'nac-filter-text',
+        dropdownId: 'nac-dropdown',
+        hiddenId: 'filter-nac',
+        defaultText: 'All Classifications',
+        defaultValue: ''
+    },
+    fundtype: {
+        displayId: 'fundtype-filter-display',
+        textId: 'fundtype-filter-text',
+        dropdownId: 'fundtype-dropdown',
+        hiddenId: 'filter-fund-type',
+        defaultText: 'All Types',
+        defaultValue: ''
+    }
+};
+
+/**
+ * Toggles a styled dropdown open/closed.
+ * 
+ * @param {string} dropdownType - Type of dropdown (date, nac, fundtype)
+ */
+function toggleStyledDropdown(dropdownType) {
+    const config = STYLED_DROPDOWN_CONFIG[dropdownType];
+    const dropdown = document.getElementById(config.dropdownId);
+    
+    // Close all other dropdowns first
+    Object.keys(STYLED_DROPDOWN_CONFIG).forEach(type => {
+        if (type !== dropdownType) {
+            const otherConfig = STYLED_DROPDOWN_CONFIG[type];
+            document.getElementById(otherConfig.dropdownId).classList.add('hidden');
+        }
+    });
+    
+    // Toggle current dropdown
+    dropdown.classList.toggle('hidden');
+    
+    // Add click outside listener to close
+    if (!dropdown.classList.contains('hidden')) {
+        setTimeout(() => {
+            document.addEventListener('click', closeStyledDropdownOnClickOutside);
+        }, 0);
+    }
+}
+
+/**
+ * Closes styled dropdown when clicking outside.
+ * 
+ * @param {Event} event - Click event
+ */
+function closeStyledDropdownOnClickOutside(event) {
+    let clickedInside = false;
+    
+    Object.keys(STYLED_DROPDOWN_CONFIG).forEach(type => {
+        const config = STYLED_DROPDOWN_CONFIG[type];
+        const dropdown = document.getElementById(config.dropdownId);
+        const display = document.getElementById(config.displayId);
+        
+        if (dropdown.contains(event.target) || display.contains(event.target)) {
+            clickedInside = true;
+        }
+    });
+    
+    if (!clickedInside) {
+        Object.keys(STYLED_DROPDOWN_CONFIG).forEach(type => {
+            const config = STYLED_DROPDOWN_CONFIG[type];
+            document.getElementById(config.dropdownId).classList.add('hidden');
+        });
+        document.removeEventListener('click', closeStyledDropdownOnClickOutside);
+    }
+}
+
+/**
+ * Updates a styled dropdown with options.
+ * 
+ * @param {string} dropdownType - Type of dropdown
+ * @param {Array} options - Array of option values
+ * @param {string} selectedValue - Currently selected value
+ */
+function updateStyledDropdown(dropdownType, options, selectedValue) {
+    const config = STYLED_DROPDOWN_CONFIG[dropdownType];
+    const dropdown = document.getElementById(config.dropdownId);
+    const textElement = document.getElementById(config.textId);
+    const hiddenInput = document.getElementById(config.hiddenId);
+    
+    // Build dropdown options HTML
+    let html = '';
+    
+    if (config.isDate) {
+        // Date dropdown - all options are values
+        html = options.map(option => {
+            const isSelected = option === selectedValue;
+            return `
+                <div class="styled-dropdown-option ${isSelected ? 'selected' : ''}" 
+                     data-value="${option}"
+                     onclick="selectStyledDropdownItem('${dropdownType}', '${option}', '${option}')">
+                    ${option}
+                </div>
+            `;
+        }).join('');
+        
+        // Set initial display text
+        textElement.textContent = selectedValue || config.defaultText;
+    } else {
+        // NAC and Fund Type - first option is the "All" option
+        html = options.map((option, index) => {
+            const value = index === 0 ? '' : option; // First option = empty value
+            const isSelected = value === selectedValue;
+            const escapedOption = option.replace(/'/g, "\\'");
+            return `
+                <div class="styled-dropdown-option ${isSelected ? 'selected' : ''}" 
+                     data-value="${value}"
+                     onclick="selectStyledDropdownItem('${dropdownType}', '${value}', '${escapedOption}')">
+                    ${option}
+                </div>
+            `;
+        }).join('');
+        
+        // Set initial display text
+        textElement.textContent = selectedValue ? selectedValue : config.defaultText;
+    }
+    
+    dropdown.innerHTML = html;
+    hiddenInput.value = selectedValue;
+}
+
+/**
+ * Selects an item from a styled dropdown.
+ * 
+ * @param {string} dropdownType - Type of dropdown
+ * @param {string} value - The value to select
+ * @param {string} displayText - The text to display
+ */
+function selectStyledDropdownItem(dropdownType, value, displayText) {
+    const config = STYLED_DROPDOWN_CONFIG[dropdownType];
+    const dropdown = document.getElementById(config.dropdownId);
+    const textElement = document.getElementById(config.textId);
+    const hiddenInput = document.getElementById(config.hiddenId);
+    
+    // Update display text
+    textElement.textContent = displayText || config.defaultText;
+    
+    // Update hidden input value
+    hiddenInput.value = value;
+    
+    // Update selected styling in dropdown
+    const options = dropdown.querySelectorAll('.styled-dropdown-option');
+    options.forEach(opt => {
+        opt.classList.remove('selected');
+        if (opt.dataset.value === value) {
+            opt.classList.add('selected');
+        }
+    });
+    
+    // Close dropdown
+    dropdown.classList.add('hidden');
+    document.removeEventListener('click', closeStyledDropdownOnClickOutside);
+    
+    // Trigger appropriate action
+    if (config.isDate) {
+        updateDateSpecificViews(value);
+    } else {
+        applyFilters();
+    }
 }
 
 /**
@@ -2925,15 +4347,15 @@ function applyTableSearch() {
             const fundName = String(fund[FIELD_NAMES.fundName] || '').toLowerCase();
             const purpose = String(fund[FIELD_NAMES.purpose] || '').toLowerCase();
             const fundType = String(fund[FIELD_NAMES.fundType] || '').toLowerCase();
-            const operatingUnit = String(fund[FIELD_NAMES.operatingUnit] || '').toLowerCase();
-            const reportingUnit = String(fund[FIELD_NAMES.reportingUnit] || '').toLowerCase();
+            const college = String(fund[FIELD_NAMES.college] || '').toLowerCase();
+            const school = String(fund[FIELD_NAMES.school] || '').toLowerCase();
             
             return fundId.includes(query) || 
                    fundName.includes(query) || 
                    purpose.includes(query) ||
                    fundType.includes(query) ||
-                   operatingUnit.includes(query) ||
-                   reportingUnit.includes(query);
+                   college.includes(query) ||
+                   school.includes(query);
         });
     }
     
@@ -2956,34 +4378,52 @@ function handleTableSearch(event) {
 function updateActiveFiltersDisplay() {
     const activeFilters = [];
     
-    const fundFilter = document.getElementById('filter-fund');
-    const operatingUnitFilter = document.getElementById('filter-operating-unit');
-    const reportingUnitFilter = document.getElementById('filter-reporting-unit');
+    // Multi-select filters
+    const selectedFunds = window.selectedFunds || [];
+    const selectedColleges = window.selectedColleges || [];
+    const selectedSchools = window.selectedSchools || [];
+    const selectedPurposes = window.selectedPurposes || [];
+    
+    // Single-select filters
     const nacFilter = document.getElementById('filter-nac');
     const fundTypeFilter = document.getElementById('filter-fund-type');
-    const purposeFilter = document.getElementById('filter-purpose');
     const mvMin = document.getElementById('filter-mv-min').value;
     const mvMax = document.getElementById('filter-mv-max').value;
     const underwaterOnly = document.getElementById('filter-underwater').checked;
-    const fundSearchValue = document.getElementById('filter-fund-search').value;
     
-    if (fundFilter.value && fundSearchValue) {
-        activeFilters.push({ label: 'Fund', value: fundSearchValue });
+    // Add multi-select filters to display
+    if (selectedFunds.length > 0) {
+        const fundCount = selectedFunds.length;
+        const displayText = fundCount === 1 
+            ? (window.fundsList?.find(f => f.id === selectedFunds[0])?.name || selectedFunds[0])
+            : `${fundCount} funds`;
+        activeFilters.push({ label: 'Funds', value: displayText });
     }
-    if (operatingUnitFilter.value) {
-        activeFilters.push({ label: 'College', value: operatingUnitFilter.value });
+    if (selectedColleges.length > 0) {
+        const displayText = selectedColleges.length === 1 
+            ? selectedColleges[0] 
+            : `${selectedColleges.length} colleges`;
+        activeFilters.push({ label: 'Colleges', value: displayText });
     }
-    if (reportingUnitFilter.value) {
-        activeFilters.push({ label: 'School', value: reportingUnitFilter.value });
+    if (selectedSchools.length > 0) {
+        const displayText = selectedSchools.length === 1 
+            ? selectedSchools[0] 
+            : `${selectedSchools.length} schools`;
+        activeFilters.push({ label: 'Schools', value: displayText });
     }
+    if (selectedPurposes.length > 0) {
+        const displayText = selectedPurposes.length === 1 
+            ? selectedPurposes[0] 
+            : `${selectedPurposes.length} purposes`;
+        activeFilters.push({ label: 'Purposes', value: displayText });
+    }
+    
+    // Add single-select filters
     if (nacFilter.value) {
         activeFilters.push({ label: 'NAC', value: nacFilter.value });
     }
     if (fundTypeFilter.value) {
         activeFilters.push({ label: 'Type', value: fundTypeFilter.value });
-    }
-    if (purposeFilter.value) {
-        activeFilters.push({ label: 'Purpose', value: purposeFilter.value });
     }
     if (mvMin) {
         activeFilters.push({ label: 'Min MV', value: formatCurrency(parseFloat(mvMin)) });
@@ -3027,10 +4467,8 @@ function updateActiveFiltersDisplay() {
  */
 function toggleFilterPanel() {
     const aside = document.getElementById('filter-aside');
-    const icon = document.getElementById('filter-toggle-icon');
     
     aside.classList.toggle('collapsed');
-    icon.classList.toggle('collapsed');
     
     // Save state to localStorage
     const isCollapsed = aside.classList.contains('collapsed');
@@ -3045,10 +4483,7 @@ function initFilterPanelState() {
     
     if (isCollapsed) {
         const aside = document.getElementById('filter-aside');
-        const icon = document.getElementById('filter-toggle-icon');
-        
         aside.classList.add('collapsed');
-        icon.classList.add('collapsed');
     }
 }
 
@@ -3056,14 +4491,33 @@ function initFilterPanelState() {
  * Resets all filters to their default (All) state.
  */
 function resetFilters() {
-    document.getElementById('filter-fund').value = '';
-    document.getElementById('filter-fund-search').value = '';
-    document.getElementById('clear-fund-search').classList.add('hidden');
-    document.getElementById('filter-operating-unit').value = '';
-    document.getElementById('filter-reporting-unit').value = '';
+    // Reset multi-select filters
+    window.selectedFunds = [];
+    window.selectedColleges = [];
+    window.selectedSchools = [];
+    window.selectedPurposes = [];
+    
+    // Clear multi-select search inputs and tags
+    const multiSelectTypes = ['fund', 'college', 'school', 'purpose'];
+    multiSelectTypes.forEach(type => {
+        const config = MULTI_SELECT_CONFIG[type];
+        document.getElementById(config.searchId).value = '';
+        document.getElementById(config.hiddenId).value = '';
+        document.getElementById(config.clearBtnId).classList.add('hidden');
+        document.getElementById(config.tagsId).innerHTML = '';
+        updateMultiSelectDropdown(type, '');
+    });
+    
+    // Reset styled single-select dropdowns (NAC and Fund Type)
     document.getElementById('filter-nac').value = '';
+    document.getElementById('nac-filter-text').textContent = 'All Classifications';
+    updateStyledDropdown('nac', ['All Classifications', ...(window.nacList || [])], '');
+    
     document.getElementById('filter-fund-type').value = '';
-    document.getElementById('filter-purpose').value = '';
+    document.getElementById('fundtype-filter-text').textContent = 'All Types';
+    updateStyledDropdown('fundtype', ['All Types', ...(window.fundTypesList || [])], '');
+    
+    // Reset other filters
     document.getElementById('filter-mv-min').value = '';
     document.getElementById('filter-mv-max').value = '';
     document.getElementById('filter-underwater').checked = false;
@@ -3404,8 +4858,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Load saved dashboard title
         loadDashboardTitle();
         
+        // Load saved logo
+        loadLogo();
+        
+        // Apply saved field labels (for filter labels, table headers, etc.)
+        applyFieldLabels();
+        
         // Initialize filter panel state (open by default, remembers user preference)
         initFilterPanelState();
+        
+        // Apply secondary brand color to export button
+        updateExportButtonColor();
         
         // Initialize Calendly popup (shows after 30 seconds, once per session)
         initCalendlyPopup();
@@ -3413,8 +4876,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Fetch data from Airtable
         const result = await fetchAirtableData();
         
-        // Update connection status badge
-        setSourceStatus(result.isLive, result.error);
+        // Update connection status
+        updateConnectionStatus(result.isLive, result.error);
         
         // Initialize dashboard if data is available
         if (result.data.length > 0) {
@@ -3432,10 +4895,54 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     } catch (error) {
         console.error('Dashboard initialization failed:', error);
-        setSourceStatus(false, 'An unexpected error occurred. Please try again.');
+        updateConnectionStatus(false, 'An unexpected error occurred. Please try again.');
         hideLoading();
     }
 });
+
+// ============================================================================
+// SECTION 12: PRINT TO PDF FUNCTIONALITY
+// ============================================================================
+
+/**
+ * Prints the dashboard to PDF in portrait mode.
+ * Automatically hides the filter panel and optimizes for print.
+ * Uses the browser's print dialog which allows saving as PDF.
+ */
+function printDashboard() {
+    // Store current filter panel state
+    const filterAside = document.getElementById('filter-aside');
+    const wasCollapsed = filterAside.classList.contains('collapsed');
+    
+    // Temporarily collapse filter panel if it's visible
+    if (!wasCollapsed) {
+        filterAside.classList.add('collapsed');
+    }
+    
+    // Get the dashboard title for the filename suggestion
+    const dashboardTitle = document.getElementById('dashboard-title').textContent.trim();
+    const selectedDate = document.getElementById('selectedDate').textContent.trim();
+    
+    // Set document title for PDF filename (browser uses this as default filename)
+    const originalTitle = document.title;
+    document.title = `${dashboardTitle} - ${selectedDate}`;
+    
+    // Small delay to ensure CSS transitions complete and charts render
+    setTimeout(() => {
+        // Trigger print dialog
+        window.print();
+        
+        // Restore original title after a short delay
+        setTimeout(() => {
+            document.title = originalTitle;
+            
+            // Restore filter panel state if it was visible
+            if (!wasCollapsed) {
+                filterAside.classList.remove('collapsed');
+            }
+        }, 500);
+    }, 300);
+}
 
 // ============================================================================
 // END OF APPLICATION
