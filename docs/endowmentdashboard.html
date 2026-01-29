@@ -3283,7 +3283,7 @@ function renderPurposeChart(data) {
                 x: { 
                     stacked: false,
                     ticks: { 
-                        callback: (val) => '$' + (val / 1000000).toFixed(1) + 'M',
+                        callback: (val) => '$' + (val / 1000000).toFixed(0) + 'M',
                         font: {
                             weight: 'bold'
                         }
@@ -3413,7 +3413,7 @@ function renderCollegeChart(data) {
                 x: { 
                     stacked: false,
                     ticks: { 
-                        callback: (val) => '$' + (val / 1000000).toFixed(1) + 'M',
+                        callback: (val) => '$' + (val / 1000000).toFixed(0) + 'M',
                         font: {
                             weight: 'bold'
                         }
