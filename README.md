@@ -2,14 +2,14 @@
 
 An interactive, browser-based financial dashboard for viewing and analyzing endowment fund performance data stored in Airtable.
 
-## 📊 Overview
+## Overview
 
 The Endowment Executive Dashboard is a standalone HTML application that connects to your Airtable database to provide comprehensive visualization and analysis of endowment fund data. It offers real-time insights into fund performance, trends, and detailed metrics through an intuitive, customizable interface.
 
 **Version:** 2.1.0  
 **Last Updated:** January 2026
 
-## ✨ Key Features
+## Key Features
 
 ### Data Visualization
 - **Interactive KPI Cards** - Display key metrics including total assets, returns, and fund performance
@@ -32,7 +32,7 @@ The Endowment Executive Dashboard is a standalone HTML application that connects
 - **Secure Storage** - API credentials stored only in browser localStorage
 - **No External Servers** - Data is transmitted only between your browser and Airtable
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Modern web browser (Chrome, Firefox, Safari, or Edge)
@@ -63,7 +63,7 @@ The Endowment Executive Dashboard is a standalone HTML application that connects
    - **Logo**: Upload your organization's logo
    - **Field Names**: Customize field labels to match your terminology
 
-## 📋 Required Airtable Fields
+## Required Airtable Fields
 
 Your Airtable table must include the following fields:
 
@@ -87,7 +87,7 @@ Your Airtable table must include the following fields:
 | Income to Principal | Currency/Number | Income transferred to principal |
 | Transfers All | Currency/Number | All transfers |
 
-## 🎨 Customization
+## Customization
 
 ### Brand Colors
 Customize four color themes to match your organization:
@@ -104,14 +104,14 @@ Customize four color themes to match your organization:
 ### Field Names
 Customize field labels to match your organization's terminology while maintaining data field mappings.
 
-## 🔒 Security & Privacy
+## Security & Privacy
 
 - **Local Storage Only**: API credentials are stored exclusively in your browser's localStorage
 - **No Third-Party Transmission**: Data is never sent to any server except Airtable
 - **Clear Data**: Remove credentials and settings by clearing your browser data
 - **Client-Side Processing**: All calculations and filtering happen in your browser
 
-## 🛠️ Technologies Used
+## Technologies Used
 
 - **HTML5** - Structure and content
 - **Tailwind CSS** - Styling and responsive design
@@ -120,22 +120,22 @@ Customize field labels to match your organization's terminology while maintainin
 - **SheetJS (xlsx)** - Excel export functionality
 - **Airtable API** - Data source integration
 
-## 📖 Usage Tips
+## Usage Tips
 
 - **Filtering**: Use the filter panel to narrow down data by fund type, purpose, or date range
 - **Exporting**: Click the "Export to Excel" button to download filtered data
 - **Printing**: The dashboard automatically formats for print with a clean, professional layout
 - **Data Refresh**: Data refreshes automatically when filters are applied or settings are changed
 
-## 🤝 Support
+## Support
 
 For Airtable setup assistance or dashboard customization support, please contact your system administrator or refer to the [Airtable API documentation](https://airtable.com/developers/web/api/introduction).
 
-## 📝 License
+## License
 
 Feel free to use.
 
-## 👥 Author
+## Author
 
 Richard Westerfield
 Account Executive for EverTrue
