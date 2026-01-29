@@ -1,4 +1,4 @@
-# Endowment Executive Dashboard
+# Endowment Dashboard
 
 An interactive, browser-based financial dashboard for viewing and analyzing endowment fund performance data stored in Airtable.
 
